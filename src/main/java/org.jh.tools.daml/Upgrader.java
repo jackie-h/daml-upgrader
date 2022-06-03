@@ -1,6 +1,7 @@
 package org.jh.tools.daml;
 
 import com.daml.daml_lf_dev.DamlLf;
+import com.daml.daml_lf_dev.DamlLf1;
 import com.daml.lf.archive.ArchivePayload;
 import com.daml.lf.archive.Decode;
 import com.daml.lf.archive.Reader;
@@ -14,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -24,7 +26,7 @@ public class Upgrader
 {
     private static final Logger LOGGER =  Logger.getLogger(Upgrader.class.getName());
 
-    public static void createUpgrades(String currentArchivePath, String newArchivePath, String outputPath)
+    public static List<String> createUpgrades(String currentArchivePath, String newArchivePath, String outputPath)
     {
         LOGGER.info("Starting upgrade");
         LOGGER.info("Current Archive Path=" + currentArchivePath);
@@ -34,8 +36,8 @@ public class Upgrader
         DamlLf.Archive archiveNew = readDar(newArchivePath);
 
         List<String> upgrades = identifyTemplatesToUpgrade(archiveOld, archiveNew);
-
         createAndWriteUpgradesToFiles(upgrades, outputPath);
+        return upgrades;
     }
 
     private static List<String> identifyTemplatesToUpgrade(DamlLf.Archive archiveCurrent,
@@ -44,12 +46,10 @@ public class Upgrader
         LOGGER.info(archiveCurrent.getHash());
         LOGGER.info(archiveNew.getHash());
 
-        List<String> names = new ArrayList<>();
-
         if (archiveCurrent.getHash().equals(archiveNew.getHash()))
         {
             LOGGER.info("Contents identical nothing to do");
-            return names;
+            return new ArrayList<>();
         }
 
         ArchivePayload payloadCurrent = Reader.readArchive(archiveCurrent).right().get();
@@ -57,24 +57,7 @@ public class Upgrader
         LOGGER.info(payloadCurrent.pkgId());
         LOGGER.info(payloadNew.pkgId());
 
-        Tuple2<String, Ast.GenPackage<Ast.Expr>> out = Decode.decodeArchivePayload(payloadCurrent, false).right().get();
-        LOGGER.info(out._1);
-
-        scala.collection.immutable.Map<Ref.DottedName, Ast.GenModule<Ast.Expr>> scalaModules = out._2.modules();
-        LOGGER.info(out._2.modules().keySet().mkString(","));
-
-        Map<Ref.DottedName, Ast.GenModule<Ast.Expr>> modules = scala.collection.JavaConverters.mapAsJavaMapConverter(scalaModules).asJava();
-
-        for(Ast.GenModule<Ast.Expr> module : modules.values())
-        {
-            Map<Ref.DottedName, Ast.GenTemplate<Ast.Expr>> templates = JavaConverters.mapAsJavaMapConverter(module.templates()).asJava();
-
-            for(Ref.DottedName name : templates.keySet())
-            {
-                names.add(name.dottedName());
-            }
-        }
-        return names;
+        return DamlLfProtoUtils.findTemplatesThatAreInOneButDifferentInTwo(payloadCurrent.proto(), payloadNew.proto());
     }
 
     private static void createAndWriteUpgradesToFiles(List<String> upgrades, String outpath)
