@@ -18,6 +18,7 @@ Smart contracts package data with logic, data schemas need migration
     - what if just giving type an alias/name
   - changing name of an input
 - Contract name change
+- Moving contract to another module but name same
 - Upgrades of standard libraries 
 - Upgrades of data object dependencies (CDM)
 
