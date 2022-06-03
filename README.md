@@ -37,6 +37,7 @@ Difference between changes that would change the database schema stored, vs ones
 - Are there any performance challenges with using extension approach ?
 - What happens if there is a change to something fundamental such as Party ?
 - Snapshot builds vs release builds ? Do we want to use that or just git hash ? Can we do auto-packaging/versioning ?
+- Versioning of DAR files, how do we enforce major/minor versions ?
 
 ##Identity - What changes the contract hash?
 
