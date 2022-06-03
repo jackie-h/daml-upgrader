@@ -1,38 +1,103 @@
 package org.jh.tools.daml;
 
 import com.daml.daml_lf_dev.DamlLf;
-import com.daml.lf.archive.*;
-import com.daml.lf.archive.Error;
+import com.daml.lf.archive.ArchivePayload;
+import com.daml.lf.archive.Decode;
+import com.daml.lf.archive.Reader;
 import com.daml.lf.data.Ref;
 import com.daml.lf.language.Ast;
-import com.google.protobuf.CodedInputStream;
-import scala.Function1;
 import scala.Tuple2;
 import scala.collection.immutable.Map;
-import scala.util.Either;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-public class Upgrader {
-    public static void main(String[] args) {
+public class Upgrader
+{
+    public static void main(String[] args)
+    {
 
         String filePath1 = args[0];
         String filePath2 = args[1];
+        String outputDirectory = args[2];
 
         System.out.println("Starting upgrade");
 
-        readDar(filePath1);
+        DamlLf.Archive archiveOld = readDar(filePath1);
+        DamlLf.Archive archiveNew = readDar(filePath2);
+
+        List<String> upgrades = identifyTemplatesToUpgrade(archiveOld, archiveNew);
+
+        createAndWriteUpgradesToFiles(upgrades, outputDirectory);
     }
 
-    private static void readDar(String filePath) {
+    private static List<String> identifyTemplatesToUpgrade(DamlLf.Archive archiveCurrent,
+                                                           DamlLf.Archive archiveNew)
+    {
+        System.out.println(archiveCurrent.getHash());
+        System.out.println(archiveNew.getHash());
+
+        if (archiveCurrent.getHash().equals(archiveNew.getHash()))
+        {
+            System.out.println("Contents identical nothing to do");
+            return new ArrayList<>();
+        }
+
+        ArchivePayload payloadCurrent = Reader.readArchive(archiveCurrent).right().get();
+        ArchivePayload payloadNew = Reader.readArchive(archiveNew).right().get();
+        System.out.println(payloadCurrent.pkgId());
+        System.out.println(payloadNew.pkgId());
+
+        Tuple2<String, Ast.GenPackage<Ast.Expr>> out = Decode.decodeArchivePayload(payloadCurrent, false).right().get();
+        System.out.println(out._1);
+
+        Map<Ref.DottedName, Ast.GenModule<Ast.Expr>> modules = out._2.modules();
+        System.out.println(out._2.modules().keySet().mkString(","));
+
+        return new ArrayList<>();
+    }
+
+    private static void createAndWriteUpgradesToFiles(List<String> upgrades, String outpath)
+    {
+        for(String contractName : upgrades)
+        {
+            createAndWriteUpgradeToFiles(contractName, outpath);
+        }
+    }
+
+    private static void createAndWriteUpgradeToFiles(String contractName, String outpath)
+    {
+        java.util.Map<String, String> contracts = UpgradeTemplate.createUpgradeTemplatesContent(contractName);
+
+        for (String upgradeContractName : contracts.keySet())
+        {
+            String fileName = outpath + "/" + upgradeContractName + ".daml";
+            Path filePath = Paths.get(fileName);
+
+            try
+            {
+                Files.writeString(filePath, contracts.get(upgradeContractName));
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+                throw new RuntimeException("Failed to create contract:" + upgradeContractName);
+            }
+        }
+    }
+
+    private static DamlLf.Archive readDar(String filePath)
+    {
         Path path = Paths.get(filePath);
 
-        try {
-
+        try
+        {
             ZipInputStream is = new ZipInputStream(java.nio.file.Files.newInputStream(path));
             ZipEntry entry = is.getNextEntry();
             System.out.println(entry.getName());
@@ -45,61 +110,14 @@ public class Upgrader {
             DamlLf.Archive archiveProto = DamlLf.Archive.parseFrom(bytes);
             System.out.println(archiveProto.getHash());
 
-            ArchivePayload payload = Reader.readArchive(archiveProto).right().get();
-            System.out.println(payload.pkgId());
-            //payload.proto().getDamlLf1().modules_
-
-            Tuple2<String, Ast.GenPackage<Ast.Expr>> out = Decode.decodeArchivePayload(payload, false).right().get();
-            System.out.println(out._1);
-
-            Map<Ref.DottedName, Ast.GenModule<Ast.Expr>> modules = out._2.modules();
-            System.out.println(out._2.modules().keySet().mkString(","));
-
-
-        } catch (IOException e) {
-            e.printStackTrace();
+            return archiveProto;
         }
-
-        //com.daml.lf.archive.UniversalArchiveDecoder
-
-//        try {
-//            //java.nio.file.Files.newInputStream(path);
-//            //GenReader genReader = new GenReader(new F)
-//
-//
-//            GenReader genReader = new GenReader(new Function1<CodedInputStream, Either>() {
-//                @Override
-//                public Either apply(CodedInputStream v1) {
-//                    try {
-//                        new Either<>()
-//                        return CodedInputStream.newInstance(java.nio.file.Files.newInputStream(path));
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-//                    return null;
-//                }
-//
-//                @Override
-//                public <A> Function1<A, Either> compose(Function1<A, CodedInputStream> g) {
-//                    return Function1.super.compose(g);
-//                }
-//
-//                @Override
-//                public <A> Function1<CodedInputStream, A> andThen(Function1<Either, A> g) {
-//                    return Function1.super.andThen(g);
-//                }
-//            });
-//
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//
-//
-//        if (maybeReader.isRight())
-//        {
-//            GenReader genReader = maybeReader.right().get();
-//            GenUniversalArchiveReader reader = new GenUniversalArchiveReader(genReader);
-//        }
+        catch (IOException e)
+        {
+            //todo: clean-up
+            e.printStackTrace();
+            throw new RuntimeException("Failed to read archive:" + filePath);
+        }
 
     }
 }

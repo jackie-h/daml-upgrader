@@ -2,6 +2,9 @@ package org.jh.tools.daml;
 
 import org.stringtemplate.v4.ST;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class UpgradeTemplate
 {
     private static final String UPGRADE_PROPOSAL = "template <proposal_contract_name>\n" +
@@ -39,11 +42,14 @@ public class UpgradeTemplate
             "           carbon_metric_tons = cert.carbon_metric_tons\n" +
             "           carbon_offset_method = \"unknown\"";
 
-    public static scala.Tuple2<String, String> createUpgradeTemplatesContent(String contractName)
+    public static Map<String, String> createUpgradeTemplatesContent(String contractName)
     {
         String proposal = createUpgradeProposal(contractName);
         String agreement = createUpgradeAgreement(contractName);
-        return new scala.Tuple2<>(proposal,agreement);
+        Map<String,String> contracts = new HashMap<>();
+        contracts.put(proposalContractName(contractName), proposal);
+        contracts.put(agreementContractName(contractName),agreement);
+        return contracts;
     }
 
     private static String createUpgradeProposal(String contractName)

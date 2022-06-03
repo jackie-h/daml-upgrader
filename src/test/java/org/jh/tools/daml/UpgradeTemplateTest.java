@@ -2,13 +2,15 @@ package org.jh.tools.daml;
 
 import org.junit.Test;
 
+import java.util.Map;
+
 public class UpgradeTemplateTest
 {
 
     @Test
     public void testUpgradeTemplate()
     {
-        scala.Tuple2<String, String> result = UpgradeTemplate.createUpgradeTemplatesContent("Carbon");
+        Map<String, String> result = UpgradeTemplate.createUpgradeTemplatesContent("Carbon");
 
 
     }
