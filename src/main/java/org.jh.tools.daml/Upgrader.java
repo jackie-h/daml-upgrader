@@ -15,50 +15,50 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class Upgrader
 {
-    public static void main(String[] args)
+    private static final Logger LOGGER =  Logger.getLogger(Upgrader.class.getName());
+
+    public static void createUpgrades(String currentArchivePath, String newArchivePath, String outputPath)
     {
+        LOGGER.info("Starting upgrade");
+        LOGGER.info("Current Archive Path=" + currentArchivePath);
+        LOGGER.info("New Archive Path=" + newArchivePath);
 
-        String filePath1 = args[0];
-        String filePath2 = args[1];
-        String outputDirectory = args[2];
-
-        System.out.println("Starting upgrade");
-
-        DamlLf.Archive archiveOld = readDar(filePath1);
-        DamlLf.Archive archiveNew = readDar(filePath2);
+        DamlLf.Archive archiveOld = readDar(currentArchivePath);
+        DamlLf.Archive archiveNew = readDar(newArchivePath);
 
         List<String> upgrades = identifyTemplatesToUpgrade(archiveOld, archiveNew);
 
-        createAndWriteUpgradesToFiles(upgrades, outputDirectory);
+        createAndWriteUpgradesToFiles(upgrades, outputPath);
     }
 
     private static List<String> identifyTemplatesToUpgrade(DamlLf.Archive archiveCurrent,
                                                            DamlLf.Archive archiveNew)
     {
-        System.out.println(archiveCurrent.getHash());
-        System.out.println(archiveNew.getHash());
+        LOGGER.info(archiveCurrent.getHash());
+        LOGGER.info(archiveNew.getHash());
 
         if (archiveCurrent.getHash().equals(archiveNew.getHash()))
         {
-            System.out.println("Contents identical nothing to do");
+            LOGGER.info("Contents identical nothing to do");
             return new ArrayList<>();
         }
 
         ArchivePayload payloadCurrent = Reader.readArchive(archiveCurrent).right().get();
         ArchivePayload payloadNew = Reader.readArchive(archiveNew).right().get();
-        System.out.println(payloadCurrent.pkgId());
-        System.out.println(payloadNew.pkgId());
+        LOGGER.info(payloadCurrent.pkgId());
+        LOGGER.info(payloadNew.pkgId());
 
         Tuple2<String, Ast.GenPackage<Ast.Expr>> out = Decode.decodeArchivePayload(payloadCurrent, false).right().get();
-        System.out.println(out._1);
+        LOGGER.info(out._1);
 
         Map<Ref.DottedName, Ast.GenModule<Ast.Expr>> modules = out._2.modules();
-        System.out.println(out._2.modules().keySet().mkString(","));
+        LOGGER.info(out._2.modules().keySet().mkString(","));
 
         return new ArrayList<>();
     }
@@ -100,15 +100,10 @@ public class Upgrader
         {
             ZipInputStream is = new ZipInputStream(java.nio.file.Files.newInputStream(path));
             ZipEntry entry = is.getNextEntry();
-            System.out.println(entry.getName());
-
+            LOGGER.info(entry.getName());
             byte[] bytes = is.readAllBytes();
-
-            //DarManifestReader.dalfNames(bytes);
-
-            System.out.println("here");
             DamlLf.Archive archiveProto = DamlLf.Archive.parseFrom(bytes);
-            System.out.println(archiveProto.getHash());
+            LOGGER.info(archiveProto.getHash());
 
             return archiveProto;
         }
