@@ -14,8 +14,9 @@ public class UpgraderTest
                 "daml-examples/scenario1/v2/.daml/dist/carbon-2.0.0.dar",
                 "target");
 
-        //Assert.assertEquals(1, result.size());
-        //Assert.assertEquals("CarbonCert", result.get(0));
+        Assert.assertEquals(2, result.size());
+        Assert.assertTrue(result.contains("CarbonCert"));
+        Assert.assertTrue(result.contains("CarbonCertProposal"));
     }
 
     @Test

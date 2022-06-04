@@ -29,6 +29,8 @@ public class Dar
     public static Dar readDar(String filePath)
     {
         Path path = Paths.get(filePath);
+        String darName = path.getFileName().toString();
+        String darNameWithoutExtension = darName.replace(".dar", "");
         DamlLf.Archive archiveProto = null;
         Map<String,String> sources = new HashMap<>();
 
@@ -41,20 +43,24 @@ public class Dar
                 String name = entry.getName();
                 LOGGER.info(name);
 
-                if (name.endsWith(".dalf"))
+                Path zipContentPath = Paths.get(name);
+                String itemName = zipContentPath.getFileName().toString();
+
+                //Read the DALF file for this code, be careful not to read the dependencies
+                if (itemName.startsWith(darNameWithoutExtension) && itemName.endsWith(".dalf"))
                 {
                     byte[] bytes = is.readAllBytes();
                     archiveProto = DamlLf.Archive.parseFrom(bytes);
                     LOGGER.info(archiveProto.getHash());
                 }
-                else if (name.endsWith(".daml"))
+                else if (itemName.endsWith(".daml"))
                 {
                     String file = new String(is.readAllBytes());
                     sources.put(name, file);
                 }
             }
 
-            return new Dar(path.getFileName().toString(), sources, archiveProto);
+            return new Dar(darName, sources, archiveProto);
         }
         catch (IOException e)
         {
