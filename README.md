@@ -40,17 +40,40 @@ Difference between changes that would change the database schema stored, vs ones
 - Snapshot builds vs release builds ? Do we want to use that or just git hash ? Can we do auto-packaging/versioning ?
 - Versioning of DAR files, how do we enforce major/minor versions ?
 
-##Identity - What changes the contract hash?
+##Identity
 
-What do we consider to be the Identifier for the contract
-- DAML uses X:dar file:template hash?
+###How does a live contract instance identify which code was used to create it?
 
-In a GS code base. 
-Options:
-- Same name e.g. Gs.CarbonContract
-- Same name but with version, e.g. Gs.CarbonContractV1 and Gs.CarbonContractV2
+DAML files are compiled into DALF archives. The DALF archive hash is the identifier for the package.
 
-If we need to rename a contract completely?
+A template "Foo" in module "Bar" will be identified as (Foo,Bar,<DALF hash>) 
+
+> Any code – i.e., Daml templates – to be uploaded must compiled down to the Daml-LF language. The unit of packaging for Daml-LF is the .dalf file. Each .dalf file is uniquely identified by its package identifier, which is the hash of its contents. Templates in a .dalf file can reference templates from other .dalf files, i.e., .dalf files can depend on other .dalf files. A .dar file is a simple archive containing multiple .dalf files, and has no identifier of its own. The archive provides a convenient way to package .dalf files together with their dependencies. The Ledger API supports only .dar file uploads. Internally, the ledger implementation need not (and often will not) store the uploaded .dar files, but only the contained .dalf files.
+
+[DAML Docs:Package Identifiers](https://docs.daml.com/concepts/identity-and-package-management.html#package-formats-and-identifiers)
+
+
+> All types, including templates and records are identified by the triple (entity name, module name, package hash).
+
+> The package hash is the primary and only identifier for a package that’s guaranteed to be available and preserved.
+
+[DAML Docs:Dependencies Hashes and Identifiers](https://docs.daml.com/daml/intro/9_Dependencies.html#hashes-and-identifiers)
+
+##Versioning
+
+DAML follows semantic versioning
+
+> All Daml components follow Semantic Versioning. In short, this means that there is a well defined “public API”, changes or breakages to which are indicated by the version number.
+>
+> Stable releases have versions MAJOR.MINOR.PATCH. Segments of the version are incremented according to the following rules:
+>
+> MAJOR version when there are incompatible API changes,
+> 
+> MINOR version when functionality is added in a backwards compatible manner, and
+> 
+> PATCH version when there are only backwards compatible bug fixes.
+
+[DAML Docs:Versioning](https://docs.daml.com/support/releases.html#versioning)
 
 ##Controls
 Once released and in use we need to be careful to
@@ -76,7 +99,20 @@ Once released and in use we need to be careful to
 
 ###Code base structure
 
-Want small self-contained DAR files
+DAML recommendations: 
+
+> separate concerns which are likely to change at different rates into separate packages
+
+> separate tests from main templates 
+
+[DAML Docs:Structuring Projects](https://docs.daml.com/daml/intro/9_Dependencies.html#structuring-projects)
+
+Want small self-contained DAR files.
+
+In a GS code base.
+Options:
+- Same name e.g. Gs.CarbonContract
+- Same name but with version, e.g. Gs.CarbonContractV1 and Gs.CarbonContractV2
 
 ###A) Keep all live versions in trunk
 
