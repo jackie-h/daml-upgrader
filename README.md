@@ -59,6 +59,8 @@ A template "Foo" in module "Bar" will be identified as (Foo,Bar,<DALF hash>)
 
 [DAML Docs:Dependencies Hashes and Identifiers](https://docs.daml.com/daml/intro/9_Dependencies.html#hashes-and-identifiers)
 
+[DAML Docs:How DAML translates to DALF Protobufs](https://docs.daml.com/app-dev/grpc/daml-to-ledger-api.html#how-daml-types-are-translated-to-protobuf)
+
 ##Versioning
 
 DAML follows semantic versioning
