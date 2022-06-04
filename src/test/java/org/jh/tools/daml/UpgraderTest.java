@@ -27,4 +27,14 @@ public class UpgraderTest
 
         Assert.assertEquals(0, result.size());
     }
+
+    @Test
+    public void testDarFilesWithSameContentsAreSame()
+    {
+        List<String> result = Upgrader.createUpgrades("daml-examples/scenario2/v1/.daml/dist/carbon-1.0.0.dar",
+                "daml-examples/scenario2/v2/.daml/dist/carbon-1.0.0.dar",
+                "target");
+
+        Assert.assertEquals(0, result.size());
+    }
 }

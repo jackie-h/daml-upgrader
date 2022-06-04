@@ -11,6 +11,8 @@ template CarbonCert
     carbon_metric_tons : Int
   where
     signatory issuer, owner
+
+    ensure carbon_metric_tons > 0
 -- CARBON_END
 
 template CarbonCertProposal
