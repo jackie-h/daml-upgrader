@@ -15,9 +15,9 @@ public class Dar
 {
     private static final Logger LOGGER =  Logger.getLogger(Dar.class.getName());
 
-    private String name;
-    private Map<String,String> sources;
-    private DamlLf.Archive damlLf;
+    private final String name;
+    private final Map<String,String> sources;
+    private final DamlLf.Archive damlLf;
 
     public Dar(String name, Map<String, String> sources, DamlLf.Archive damlLf)
     {
