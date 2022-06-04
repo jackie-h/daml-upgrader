@@ -16,7 +16,7 @@ public class DamlAstUtils
 {
     private static final Logger LOGGER = Logger.getLogger(DamlAstUtils.class.getName());
 
-    public static void compareAsts(ArchivePayload payloadCurrent, ArchivePayload payloadNew)
+    public static List<String> compareAsts(ArchivePayload payloadCurrent, ArchivePayload payloadNew)
     {
         List<String> names = new ArrayList<>();
 
@@ -59,5 +59,6 @@ public class DamlAstUtils
                 }
             }
         }
+        return names;
     }
 }
