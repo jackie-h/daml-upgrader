@@ -31,9 +31,14 @@ public class UpgraderTest
     @Test
     public void testDarFilesWithSameContentsAreSame()
     {
-        List<String> result = Upgrader.createUpgrades("daml-examples/scenario2/v1/.daml/dist/carbon-1.0.0.dar",
-                "daml-examples/scenario2/v2/.daml/dist/carbon-1.0.0.dar",
-                "target");
+        String darPath1 = "daml-examples/scenario2/v1/.daml/dist/carbon-1.0.0.dar";
+        String darPath2 = "daml-examples/scenario2/v2/.daml/dist/carbon-1.0.0.dar";
+        Dar dar1 = Dar.readDar(darPath1);
+        Dar dar2 = Dar.readDar(darPath2);
+        Assert.assertEquals("Files with same contents should have the same hash",
+                dar1.getDamlLf().getHash(), dar2.getDamlLf().getHash());
+
+        List<String> result = Upgrader.createUpgrades(darPath1, darPath2, "target");
 
         Assert.assertEquals(0, result.size());
     }
