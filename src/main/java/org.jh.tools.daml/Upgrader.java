@@ -1,21 +1,15 @@
 package org.jh.tools.daml;
 
 import com.daml.daml_lf_dev.DamlLf;
-import com.daml.daml_lf_dev.DamlLf1;
 import com.daml.lf.archive.ArchivePayload;
-import com.daml.lf.archive.Decode;
 import com.daml.lf.archive.Reader;
-import com.daml.lf.data.Ref;
-import com.daml.lf.language.Ast;
-import scala.Tuple2;
-import scala.collection.JavaConverters;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -32,8 +26,8 @@ public class Upgrader
         LOGGER.info("Current Archive Path=" + currentArchivePath);
         LOGGER.info("New Archive Path=" + newArchivePath);
 
-        DamlLf.Archive archiveOld = readDar(currentArchivePath);
-        DamlLf.Archive archiveNew = readDar(newArchivePath);
+        DamlLf.Archive archiveOld = readDar(currentArchivePath).getDamlLf();
+        DamlLf.Archive archiveNew = readDar(newArchivePath).getDamlLf();
 
         List<String> upgrades = identifyTemplatesToUpgrade(archiveOld, archiveNew);
         createAndWriteUpgradesToFiles(upgrades, outputPath);
@@ -89,20 +83,35 @@ public class Upgrader
         }
     }
 
-    private static DamlLf.Archive readDar(String filePath)
+    private static Dar readDar(String filePath)
     {
         Path path = Paths.get(filePath);
+        DamlLf.Archive archiveProto = null;
+        Map<String,String> sources = new HashMap<>();
 
-        try
+        try(ZipInputStream is = new ZipInputStream(java.nio.file.Files.newInputStream(path)))
         {
-            ZipInputStream is = new ZipInputStream(java.nio.file.Files.newInputStream(path));
-            ZipEntry entry = is.getNextEntry();
-            LOGGER.info(entry.getName());
-            byte[] bytes = is.readAllBytes();
-            DamlLf.Archive archiveProto = DamlLf.Archive.parseFrom(bytes);
-            LOGGER.info(archiveProto.getHash());
 
-            return archiveProto;
+            ZipEntry entry;
+            while((entry = is.getNextEntry()) != null)
+            {
+                String name = entry.getName();
+                LOGGER.info(name);
+
+                if (name.endsWith(".dalf"))
+                {
+                    byte[] bytes = is.readAllBytes();
+                    archiveProto = DamlLf.Archive.parseFrom(bytes);
+                    LOGGER.info(archiveProto.getHash());
+                }
+                else if (name.endsWith(".daml"))
+                {
+                    String file = new String(is.readAllBytes());
+                    sources.put(name, file);
+                }
+            }
+
+            return new Dar(path.getFileName().toString(), sources, archiveProto);
         }
         catch (IOException e)
         {
