@@ -1,0 +1,16 @@
+module Parties where
+
+import Daml.Script
+
+data LedgerParties = LedgerParties with
+  bank : Party
+  alice : Party
+  bob : Party
+
+
+allocateParties : Script LedgerParties
+allocateParties = do
+  alice <- allocateParty "alice"
+  bob <- allocateParty "bob"
+  bank <- allocateParty "Bank"
+  pure (LedgerParties bank alice bob)

@@ -1,0 +1,9 @@
+module Scenario1Test where
+
+import Carbon
+
+carbon_test_1 = script do
+  alice <- allocateParty "Alice"
+  bob <- allocateParty "Bob"
+  submit alice do
+    createCmd Carbon.CarbonCertProposal with owner = alice
