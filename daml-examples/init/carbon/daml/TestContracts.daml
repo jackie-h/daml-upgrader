@@ -7,6 +7,5 @@ createContracts = script do
     alice <- allocateParty "alice"
     bob <- allocateParty "bob"
 
-    submit alice do
-        createCmd CarbonCertProposal with issuer = alice, owner = bob, carbon_metric_tons = 100
-
+    bobProposal <- submit alice $ createCmd (CarbonCertProposal alice bob 10)
+    submit bob $ exerciseCmd bobProposal CarbonCertProposal_Accept
