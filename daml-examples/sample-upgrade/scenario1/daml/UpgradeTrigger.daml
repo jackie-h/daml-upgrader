@@ -1,0 +1,29 @@
+module UpgradeTrigger where
+
+import DA.Foldable (forA_)
+import Daml.Trigger
+import UpgradeCarbon
+import qualified V1.Carbon as CarbonV1
+
+upgradeTrigger : Trigger ()
+upgradeTrigger = Trigger with
+  initialize = pure ()
+  updateState = \_msg -> pure ()
+  registeredTemplates = AllInDar
+  heartbeat = None
+  rule = triggerRule
+
+triggerRule : Party -> TriggerA () ()
+triggerRule issuer = do
+  agreements <-
+    filter (\(_cid, agreement) -> agreement.issuer == issuer) <$>
+    query @UpgradeCarbonCertAgreement
+  allCerts <-
+    filter (\(_cid, cert) -> cert.issuer == issuer) <$>
+    query @CarbonV1.CarbonCert
+  forA_ agreements $ \(agreementCid, agreement) -> do
+    let certsForOwner = filter (\(_cid, cert) -> cert.owner == agreement.owner) allCerts
+    forA_ certsForOwner $ \(certCid, _) ->
+      emitCommands
+        [exerciseCmd agreementCid (Upgrade certCid)]
+        [toAnyContractId certCid]

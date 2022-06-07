@@ -9,6 +9,7 @@ dependencies:
   - daml-prim
   - daml-stdlib
   - daml-script
+  - daml-trigger
   - ../../scenario1/v1/.daml/dist/carbon-1.0.0.dar
   - ../../scenario1/v2/.daml/dist/carbon-2.0.0.dar
 
