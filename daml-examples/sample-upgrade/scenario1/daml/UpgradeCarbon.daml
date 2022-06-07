@@ -1,0 +1,38 @@
+module UpgradeCarbon where
+
+import qualified V1.Carbon as CarbonV1
+import qualified V2.Carbon as CarbonV2
+
+template UpgradeCarbonCertProposal
+  with
+    issuer : Party
+    owner : Party
+  where
+    signatory issuer
+    observer owner
+    key (issuer, owner) : (Party, Party)
+    maintainer key._1
+    choice Accept : ContractId UpgradeCarbonCertAgreement
+      controller owner
+      do create UpgradeCarbonCertAgreement with ..
+
+template UpgradeCarbonCertAgreement
+  with
+    issuer : Party
+    owner : Party
+  where
+    signatory issuer, owner
+    key (issuer, owner) : (Party, Party)
+    maintainer key._1
+    nonconsuming choice Upgrade : ContractId CarbonV2.CarbonCert
+      with
+        certId : ContractId CarbonV1.CarbonCert
+      controller issuer
+      do cert <- fetch certId
+         assert (cert.issuer == issuer)
+         assert (cert.owner == owner)
+         archive certId
+         create CarbonV2.CarbonCert with
+           issuer = cert.issuer
+           owner = cert.owner
+           carbon_metric_tons = cert.carbon_metric_tons
