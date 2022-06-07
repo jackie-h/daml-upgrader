@@ -28,6 +28,8 @@ Difference between changes that would change the database schema stored, vs ones
 - How can interfaces help?
 - Do all contracts need upgrades ? Some don't persist state ? If none are in flight, can remove ?
 - Does the operator have the ability to know all contracts in use ?
+- Can the operator create upgrade proposals for all parties ?
+- Should we auto-expire contracts that have not been accepted ?
 
 - Generated java and javascript code - that is per version, is it possible to generate across versions
   - New fields - handled as optional ?
