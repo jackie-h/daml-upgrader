@@ -6,17 +6,12 @@ import DA.List (dedup)
 import UpgradeCarbon
 import qualified V1.Carbon as CarbonV1
 
-data Parties = Parties
-  with
-    alice : Party
-    bob : Party
-    charlie : Party
 
-initiateUpgrade : Parties -> Script ()
-initiateUpgrade Parties{alice} = do
-  certs <- query @CarbonV1.CarbonCert alice
-  let myCerts = filter (\(_cid, c) -> c.issuer == alice) certs
+initiateUpgrade : Party -> Script ()
+initiateUpgrade theOwner = do
+  certs <- query @CarbonV1.CarbonCert theOwner
+  let myCerts = filter (\(_cid, c) -> c.issuer == theOwner) certs
   let owners = dedup $ map (\(_cid, c) -> c.owner) myCerts
   forA_ owners $ \owner -> do
     debugRaw ("Creating upgrade proposal for: " <> show owner)
-    submit alice $ createCmd (UpgradeCarbonCertProposal alice owner)
+    submit theOwner $ createCmd (UpgradeCarbonCertProposal theOwner owner)
