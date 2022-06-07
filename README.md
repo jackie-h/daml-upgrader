@@ -96,6 +96,7 @@ Once released and in use we need to be careful to
 - Emergency upgrades - need a "breakglass" force upgrade for bad bugs ? Or ability to freeze actions on contracts until upgraded?
 - Timelines - do we force upgrades to be accepted within a certain timeline ? Need to control how many versions are out
 - Developer should review upgrade contracts, tooling can generate them but should be reviewed.
+- Rollbacks, ability to downgrade contracts
 
 ##Solutions
 
@@ -115,6 +116,10 @@ In a GS code base.
 Options:
 - Same name e.g. Gs.CarbonContract
 - Same name but with version, e.g. Gs.CarbonContractV1 and Gs.CarbonContractV2
+
+Dealing with naming collisions:
+
+[DAML Docs:Naming Collisions](https://docs.daml.com/daml/reference/packages.html#handling-module-name-collisions)
 
 ###A) Keep all live versions in trunk
 
