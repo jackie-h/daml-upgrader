@@ -24,21 +24,23 @@ public class UpgraderTest
     @Test
     public void testEndToEnd() throws IOException
     {
-        cleanBuildDar("daml-examples/init/parties");
+        //cleanBuildDar("daml-examples/init/parties");
         cleanBuildDar("daml-examples/scenario1/v1");
         cleanBuildDar("daml-examples/scenario1/v2");
+        cleanBuildDar("daml-examples/init/carbon");
 
         Process sandbox = startSandbox();
 
-        execCmd("daml script --dar daml-examples/init/parties/.daml/dist/init-1.0.0.dar --script-name Parties:allocateParties --ledger-host localhost --ledger-port 6865");
+        //It is somewhat unwieldy to set-up parties first and get them back later - https://blog.digitalasset.com/developers/parties-users-daml-2
+        //execCmd("daml script --dar daml-examples/init/parties/.daml/dist/init-1.0.0.dar --script-name Parties:allocateParties --ledger-host localhost --ledger-port 6865");
+
+        execCmd("daml ledger upload-dar daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar --host localhost --port 6865");
+
+        execCmd("daml script --dar daml-examples/init/carbon/.daml/dist/test-contracts-1.0.0.dar --script-name TestContracts:createContracts --ledger-host localhost --ledger-port 6865");
 
         String parties = execCmd("daml ledger list-parties --host localhost --port 6865");
 
         Assert.assertTrue(parties.contains("\"bob\""));
-
-        execCmd("daml ledger upload-dar daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar --host localhost --port 6865");
-
-
         //String res2 = execCmd("daml test --files daml-examples/init/parties/daml/Parties.daml");
         //String res = execCmd("daml test --files src/test/resources/Scenario1Test.daml");
 

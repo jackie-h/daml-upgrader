@@ -1,0 +1,12 @@
+module TestContracts where
+
+import Daml.Script
+import Carbon
+
+createContracts = script do
+    alice <- allocateParty "alice"
+    bob <- allocateParty "bob"
+
+    submit alice do
+        createCmd CarbonCertProposal with issuer = alice, owner = bob, carbon_metric_tons = 100
+
