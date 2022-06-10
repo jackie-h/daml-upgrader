@@ -8,7 +8,7 @@ import java.util.Map;
 
 public class UpgradeTemplate
 {
-    private static final String UPGRADE_TEMPLATE = "module Upgrade<module_name> where\n" +
+    private static final String UPGRADE_TEMPLATE = "module Upgrade<contract_name> where\n" +
             "\n" +
             "import qualified V1.<module_name> as <module_name>V1\n" +
             "import qualified V2.<module_name> as <module_name>V2\n" +
@@ -51,10 +51,12 @@ public class UpgradeTemplate
     public static Map<String, String> createUpgradeTemplatesContent(String moduleName, List<String> contractNames)
     {
         Map<String,String> contracts = new HashMap<>();
+
         for(String contractName: contractNames)
         {
             String upgradeTemplate = createUpgradeTemplate(moduleName, contractName);
-            contracts.put(moduleName, upgradeTemplate);
+            String upgradeModuleName = "Upgrade" + contractName;
+            contracts.put(upgradeModuleName, upgradeTemplate);
         }
         return contracts;
     }
