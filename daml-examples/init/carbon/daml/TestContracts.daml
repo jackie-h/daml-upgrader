@@ -3,9 +3,11 @@ module TestContracts where
 import Daml.Script
 import Carbon
 
-createContracts = script do
+createContracts : Script Party
+createContracts = do
     alice <- allocateParty "alice"
     bob <- allocateParty "bob"
 
     bobProposal <- submit alice $ createCmd (CarbonCertProposal alice bob 10)
     submit bob $ exerciseCmd bobProposal CarbonCertProposal_Accept
+    pure (alice)

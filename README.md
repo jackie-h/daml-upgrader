@@ -41,6 +41,10 @@ Difference between changes that would change the database schema stored, vs ones
 - What happens if there is a change to something fundamental such as Party ?
 - Snapshot builds vs release builds ? Do we want to use that or just git hash ? Can we do auto-packaging/versioning ?
 - Versioning of DAR files, how do we enforce major/minor versions ?
+- Do we want to upgrade all contracts? Might be ok to leave some if not critical? 
+
+- Initial go-live - perhaps ok to do upgrades without triggers?
+- Are we they only "issuer" for contracts for first go-live?
 
 ##Identity
 
@@ -184,5 +188,8 @@ Upgrade contract
  - Inputs change?
    - No? 
    - Yes? Need to figure out if those can be defaulted
+   
 
-    
+Trigger service. If we use triggers may need to run the trigger service:
+
+upgradeTrig

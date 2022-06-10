@@ -7,7 +7,7 @@ import UpgradeCarbon
 import qualified V1.Carbon as CarbonV1
 
 
-initiateUpgrade : Party -> Script ()
+initiateUpgrade : Party -> Script Text
 initiateUpgrade theOwner = do
   certs <- query @CarbonV1.CarbonCert theOwner
   let myCerts = filter (\(_cid, c) -> c.issuer == theOwner) certs
@@ -15,3 +15,4 @@ initiateUpgrade theOwner = do
   forA_ owners $ \owner -> do
     debugRaw ("Creating upgrade proposal for: " <> show owner)
     submit theOwner $ createCmd (UpgradeCarbonCertProposal theOwner owner)
+  pure ("Success")
