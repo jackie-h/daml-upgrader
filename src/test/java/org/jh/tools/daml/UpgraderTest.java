@@ -55,30 +55,25 @@ public class UpgraderTest
             String parties = execCmd("daml ledger list-parties --host localhost --port 6865");
 
             Assert.assertTrue(parties.contains("\"bob\""));
-            //String res2 = execCmd("daml test --files daml-examples/init/parties/daml/Parties.daml");
-            //String res = execCmd("daml test --files src/test/resources/Scenario1Test.daml");
 
             execCmd("daml ledger upload-dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --host localhost --port 6865");
 
-//            CompletableFuture<String> completableFuture = CompletableFuture.supplyAsync(() -> {
-//                try
-//                {
-//                    return execCmd("daml trigger --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --trigger-name UpgradeTrigger:upgradeTrigger --ledger-host localhost --ledger-port 6865 --ledger-party=alice");
-//                }
-//                catch (IOException e)
-//                {
-//                    fail();
-//                    return "Failed";
-//                }
-//            });
+            CompletableFuture<String> completableFuture = CompletableFuture.supplyAsync(() -> {
+                try
+                {
+                    return execCmd("daml trigger --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --trigger-name UpgradeTrigger:upgradeTrigger --ledger-host localhost --ledger-port 6865 --ledger-party=alice");
+                }
+                catch (IOException e)
+                {
+                    fail();
+                    return "Failed";
+                }
+            });
 
-            //String partiesJson = parties.substring(parties.indexOf("\n") + 1);
-            //Path filePath = Paths.get("target", "parties.json");
-            //Files.writeString(filePath, initOutput);
 
             execCmd("daml script --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --script-name InitiateUpgrade:initiateUpgrade --ledger-host localhost --ledger-port 6865 --input-file=target/parties.json");
 
-            //completableFuture.cancel(true);
+            completableFuture.cancel(true);
         }
         finally
         {
@@ -104,7 +99,7 @@ public class UpgraderTest
 //            //ok
 //        }
 
-        long end=System.currentTimeMillis() + 20000;
+        long end=System.currentTimeMillis() + 15000;
 
         BufferedReader stdInput = null;
         StringBuilder out = new StringBuilder();
@@ -132,12 +127,12 @@ public class UpgraderTest
         //String i = (stdInput.ready()) ? stdInput.readLine() : null;
 
         // Read any errors from the attempted command
-//        String e = (stdError.ready()) ? stdError.readLine() : null;
-//
-//        if(e != null)
-//        {
-//            fail(e);
-//        }
+        String e = (stdError.ready()) ? stdError.readLine() : null;
+
+        if(e != null)
+        {
+            fail(e);
+        }
         return proc;
     }
 
