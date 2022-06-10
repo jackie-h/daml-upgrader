@@ -12,35 +12,47 @@ import java.util.Map;
 public class DamlLfProtoUtils
 {
 
-    public static List<String> findTemplatesThatAreInOneButDifferentInTwo(DamlLf.ArchivePayload one, DamlLf.ArchivePayload two)
+    public static Map<String,List<String>> findTemplatesThatAreInOneButDifferentInTwo(DamlLf.ArchivePayload one, DamlLf.ArchivePayload two)
     {
-        List<String> changed = new ArrayList<>();
+        Map<String,List<String>> moduleTemplatesChanged = new HashMap<>();
 
-        Map<String, DamlLf1.DefTemplate> templatesOne = collectTemplates(one.getDamlLf1());
-        Map<String, DamlLf1.DefTemplate> templatesTwo = collectTemplates(two.getDamlLf1());
+        Map<String, Map<String, DamlLf1.DefTemplate>> moduleTemplatesOne = collectTemplates(one.getDamlLf1());
+        Map<String, Map<String, DamlLf1.DefTemplate>> moduleTemplatesTwo = collectTemplates(two.getDamlLf1());
 
-        for(String templateName: templatesOne.keySet())
+        for(String moduleName: moduleTemplatesOne.keySet())
         {
-            DamlLf1.DefTemplate template1 = templatesOne.get(templateName);
-            DamlLf1.DefTemplate template2 = templatesTwo.get(templateName);
+            Map<String, DamlLf1.DefTemplate> templatesOne = moduleTemplatesOne.get(moduleName);
+            Map<String, DamlLf1.DefTemplate> templatesTwo = moduleTemplatesTwo.get(moduleName);
+            List<String> changed = new ArrayList<>();
 
-            if(template2 != null)
+            for (String templateName : templatesOne.keySet())
             {
-                if(!templatesEqualIgnoreLocation(template1, template2))
+                DamlLf1.DefTemplate template1 = templatesOne.get(templateName);
+                DamlLf1.DefTemplate template2 = templatesTwo.get(templateName);
+
+                if (template2 != null)
                 {
-                    changed.add(templateName);
+                    if (!templatesEqualIgnoreLocation(template1, template2))
+                    {
+                        changed.add(templateName);
+                    }
                 }
+            }
+            if(!changed.isEmpty())
+            {
+                moduleTemplatesChanged.put(moduleName, changed);
             }
         }
 
-        return changed;
+        return moduleTemplatesChanged;
     }
 
-    public static Map<String, DamlLf1.DefTemplate> collectTemplates(DamlLf1.Package _package)
+    public static Map<String,Map<String, DamlLf1.DefTemplate>> collectTemplates(DamlLf1.Package _package)
     {
-        Map<String, DamlLf1.DefTemplate> result = new HashMap<>();
+        Map<String,Map<String, DamlLf1.DefTemplate>> moduleTemplates = new HashMap<>();
         for(DamlLf1.Module module: _package.getModulesList())
         {
+            Map<String, DamlLf1.DefTemplate> result = new HashMap<>();
             for(DamlLf1.DefTemplate template: module.getTemplatesList())
             {
                 List<Integer> internedStrs = _package.getInternedDottedNames(template.getTyconInternedDname()).getSegmentsInternedStrList();
@@ -48,8 +60,10 @@ public class DamlLfProtoUtils
                 String name = _package.getInternedStrings(internedStrs.get(0));
                 result.put(name, template);
             }
+            String moduleName = _package.getInternedStrings(_package.getInternedDottedNames(module.getNameInternedDname()).getSegmentsInternedStrList().get(0));
+            moduleTemplates.put(moduleName, result);
         }
-        return result;
+        return moduleTemplates;
     }
 
     private static boolean templatesEqualIgnoreLocation(DamlLf1.DefTemplate one, DamlLf1.DefTemplate two)

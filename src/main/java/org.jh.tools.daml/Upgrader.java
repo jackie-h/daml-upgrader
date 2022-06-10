@@ -8,15 +8,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 public class Upgrader
 {
     private static final Logger LOGGER =  Logger.getLogger(Upgrader.class.getName());
 
-    public static List<String> createUpgrades(String currentArchivePath, String newArchivePath, String outputPath)
+    public static Map<String, List<String>> createUpgrades(String currentArchivePath, String newArchivePath, String outputPath)
     {
         LOGGER.info("Starting upgrade");
         LOGGER.info("Current Archive Path=" + currentArchivePath);
@@ -25,13 +25,13 @@ public class Upgrader
         DamlLf.Archive archiveOld = Dar.readDar(currentArchivePath).getDamlLf();
         DamlLf.Archive archiveNew = Dar.readDar(newArchivePath).getDamlLf();
 
-        List<String> upgrades = identifyTemplatesToUpgrade(archiveOld, archiveNew);
+        Map<String, List<String>> upgrades = identifyTemplatesToUpgrade(archiveOld, archiveNew);
         createAndWriteUpgradesToFiles(upgrades, outputPath);
         return upgrades;
     }
 
-    private static List<String> identifyTemplatesToUpgrade(DamlLf.Archive archiveCurrent,
-                                                           DamlLf.Archive archiveNew)
+    private static Map<String, List<String>> identifyTemplatesToUpgrade(DamlLf.Archive archiveCurrent,
+                                                                        DamlLf.Archive archiveNew)
     {
         LOGGER.info(archiveCurrent.getHash());
         LOGGER.info(archiveNew.getHash());
@@ -50,17 +50,18 @@ public class Upgrader
         return DamlLfProtoUtils.findTemplatesThatAreInOneButDifferentInTwo(payloadCurrent.proto(), payloadNew.proto());
     }
 
-    private static void createAndWriteUpgradesToFiles(List<String> upgrades, String outpath)
+    private static void createAndWriteUpgradesToFiles(Map<String,List<String>> upgrades, String outpath)
     {
-        for(String contractName : upgrades)
+        for(String moduleName : upgrades.keySet())
         {
-            createAndWriteUpgradeToFiles(contractName, outpath);
+            List<String> contractNames = upgrades.get(moduleName);
+            createAndWriteUpgradeToFiles(moduleName, contractNames, outpath);
         }
     }
 
-    private static void createAndWriteUpgradeToFiles(String contractName, String outpath)
+    private static void createAndWriteUpgradeToFiles(String moduleName, List<String> contractNames, String outpath)
     {
-        java.util.Map<String, String> contracts = UpgradeTemplate.createUpgradeTemplatesContent(contractName);
+        java.util.Map<String, String> contracts = UpgradeTemplate.createUpgradeTemplatesContent(moduleName, contractNames);
 
         for (String upgradeContractName : contracts.keySet())
         {

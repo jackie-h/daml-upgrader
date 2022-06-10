@@ -3,11 +3,17 @@ package org.jh.tools.daml;
 import org.stringtemplate.v4.ST;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class UpgradeTemplate
 {
-    private static final String UPGRADE_PROPOSAL = "template <proposal_contract_name>\n" +
+    private static final String UPGRADE_TEMPLATE = "module Upgrade<module_name> where\n" +
+            "\n" +
+            "import qualified V1.<module_name> as <module_name>V1\n" +
+            "import qualified V2.<module_name> as <module_name>V2\n" +
+            "\n" +
+            "template Upgrade<contract_name>Proposal\n" +
             "  with\n" +
             "    issuer : Party\n" +
             "    owner : Party\n" +
@@ -18,9 +24,9 @@ public class UpgradeTemplate
             "    maintainer key._1\n" +
             "    choice Accept : ContractId <agreement_contract_name>\n" +
             "      controller owner\n" +
-            "      do create <agreement_contract_name> with ..";
-
-    private static final String UPGRADE_AGREEMENT = "template <agreement_contract_name>\n" +
+            "      do create <agreement_contract_name> with ..\n" +
+            "\n" +
+            "template Upgrade<contract_name>Agreement\n" +
             "  with\n" +
             "    issuer : Party\n" +
             "    owner : Party\n" +
@@ -28,63 +34,36 @@ public class UpgradeTemplate
             "    signatory issuer, owner\n" +
             "    key (issuer, owner) : (Party, Party)\n" +
             "    maintainer key._1\n" +
-            "    nonconsuming choice Upgrade : ContractId <new_contract_name>\n" +
+            "    nonconsuming choice Upgrade : ContractId <module_name>V2.<contract_name>\n" +
             "      with\n" +
-            "        certId : ContractId <current_contract_name>\n" +
+            "        certId : ContractId <module_name>V1.<contract_name>\n" +
             "      controller issuer\n" +
             "      do cert \\<- fetch certId\n" +
             "         assert (cert.issuer == issuer)\n" +
             "         assert (cert.owner == owner)\n" +
             "         archive certId\n" +
-            "         create <new_contract_name> with\n" +
+            "         create <module_name>V2.<contract_name> with\n" +
             "           issuer = cert.issuer\n" +
             "           owner = cert.owner\n" +
             "           carbon_metric_tons = cert.carbon_metric_tons\n" +
             "           carbon_offset_method = \"unknown\"";
 
-    public static Map<String, String> createUpgradeTemplatesContent(String contractName)
+    public static Map<String, String> createUpgradeTemplatesContent(String moduleName, List<String> contractNames)
     {
-        String proposal = createUpgradeProposal(contractName);
-        String agreement = createUpgradeAgreement(contractName);
         Map<String,String> contracts = new HashMap<>();
-        contracts.put(proposalContractName(contractName), proposal);
-        contracts.put(agreementContractName(contractName),agreement);
+        for(String contractName: contractNames)
+        {
+            String upgradeTemplate = createUpgradeTemplate(moduleName, contractName);
+            contracts.put(moduleName, upgradeTemplate);
+        }
         return contracts;
     }
 
-    private static String createUpgradeProposal(String contractName)
+    private static String createUpgradeTemplate(String moduleName, String contractName)
     {
-        String proposalContractName = proposalContractName(contractName);
-        String agreementContractName = agreementContractName(contractName);
-
-        ST proposal = new ST(UPGRADE_PROPOSAL);
-        proposal.add("proposal_contract_name", proposalContractName);
-        proposal.add("agreement_contract_name", agreementContractName);
-
-        return proposal.render();
-    }
-
-    private static String createUpgradeAgreement(String contractName)
-    {
-        String agreementContractName = agreementContractName(contractName);
-
-        String oldName = contractName;
-        String newName = contractName;
-
-        ST agreement = new ST(UPGRADE_AGREEMENT);
-        agreement.add("agreement_contract_name", agreementContractName);
-        agreement.add("current_contract_name", oldName);
-        agreement.add("new_contract_name", newName);
-        return agreement.render();
-    }
-
-    private static String proposalContractName(String contractName)
-    {
-        return "Upgrade" + contractName + "Proposal";
-    }
-
-    private static String agreementContractName(String contractName)
-    {
-        return "Upgrade" + contractName + "Agreement";
+        ST upgrade = new ST(UPGRADE_TEMPLATE);
+        upgrade.add("module_name", moduleName);
+        upgrade.add("contract_name", contractName);
+        return upgrade.render();
     }
 }

@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class UpgraderTest
@@ -101,9 +102,11 @@ public class UpgraderTest
     @Test
     public void testScenario1()
     {
-        List<String> result = Upgrader.createUpgrades("daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar",
+        Map<String, List<String>> modulesResult = Upgrader.createUpgrades("daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar",
                 "daml-examples/scenario1/v2/.daml/dist/carbon-2.0.0.dar",
                 "target");
+
+        List<String> result = modulesResult.get("Carbon");
 
         Assert.assertEquals(2, result.size());
         Assert.assertTrue(result.contains("CarbonCert"));
@@ -113,7 +116,7 @@ public class UpgraderTest
     @Test
     public void testSameDarFileProducesNoChange()
     {
-        List<String> result = Upgrader.createUpgrades("daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar",
+        Map<String, List<String>> result = Upgrader.createUpgrades("daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar",
                 "daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar",
                 "target");
 
@@ -130,7 +133,7 @@ public class UpgraderTest
         Assert.assertEquals("Files with same contents should have the same hash",
                 dar1.getDamlLf().getHash(), dar2.getDamlLf().getHash());
 
-        List<String> result = Upgrader.createUpgrades(darPath1, darPath2, "target");
+        Map<String, List<String>> result = Upgrader.createUpgrades(darPath1, darPath2, "target");
 
         Assert.assertEquals(0, result.size());
     }
