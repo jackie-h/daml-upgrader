@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -50,18 +51,25 @@ public class UpgraderTest
 
             execCmd("daml ledger upload-dar daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar --host localhost --port 6865");
 
+            //Alice creates a CarbonCertProposal for a CarbonCert with issuer Alice and owner Bob
+            //Bob accepts the proposal
             execCmd("daml script --dar daml-examples/init/carbon/.daml/dist/test-contracts-1.0.0.dar --script-name TestContracts:createContracts --ledger-host localhost --ledger-port 6865 --output-file=target/parties.json");
+
+            //Query contracts V1
+            execCmd("daml script --dar daml-examples/init/carbon/.daml/dist/test-contracts-1.0.0.dar --script-name TestContracts:queryContracts --ledger-host localhost --ledger-port 6865 --input-file=target/parties.json --output-file=target/contracts.json");
 
             String parties = execCmd("daml ledger list-parties --host localhost --port 6865");
 
             Assert.assertTrue(parties.contains("\"bob\""));
 
+            //Upload the upgrade code
             execCmd("daml ledger upload-dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --host localhost --port 6865");
 
+            //Create the trigger for Bob
             CompletableFuture<String> completableFuture = CompletableFuture.supplyAsync(() -> {
                 try
                 {
-                    return execCmd("daml trigger --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --trigger-name UpgradeTrigger:upgradeTrigger --ledger-host localhost --ledger-port 6865 --ledger-party=alice");
+                    return execCmd("daml trigger --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --trigger-name UpgradeTrigger:upgradeTrigger --ledger-host localhost --ledger-port 6865 --ledger-party=bob");
                 }
                 catch (IOException e)
                 {
@@ -71,7 +79,26 @@ public class UpgraderTest
             });
 
 
+            //Alice initiaties an upgrade
             execCmd("daml script --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --script-name InitiateUpgrade:initiateUpgrade --ledger-host localhost --ledger-port 6865 --input-file=target/parties.json");
+
+            //Query for contracts
+            execCmd("daml script --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --script-name InitiateUpgrade:queryUpgrade --ledger-host localhost --ledger-port 6865 --input-file=target/parties.json --output-file=target/contracts.json");
+            String outUpgrades = readContractsFile();
+
+            //Wait for trigger to do it's stuff
+            try
+            {
+                TimeUnit.MILLISECONDS.sleep(5000);
+            }
+            catch (InterruptedException e)
+            {
+                //ok
+            }
+
+            //Query for V1 contracts again
+            execCmd("daml script --dar daml-examples/init/carbon/.daml/dist/test-contracts-1.0.0.dar --script-name TestContracts:queryContracts --ledger-host localhost --ledger-port 6865 --input-file=target/parties.json --output-file=target/contracts.json");
+            String outCarbonNow = readContractsFile();
 
             completableFuture.cancel(true);
         }
@@ -88,6 +115,15 @@ public class UpgraderTest
             }
         }
 
+    }
+
+    private String readContractsFile() throws IOException
+    {
+        Path pathContracts = Paths.get("target", "contracts.json");
+        byte[] encoded = Files.readAllBytes(pathContracts);
+        String content = new String(encoded, StandardCharsets.UTF_8);
+        System.out.println(content);
+        return content;
     }
 
     public Process startSandbox() throws IOException

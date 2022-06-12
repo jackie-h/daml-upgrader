@@ -16,3 +16,9 @@ initiateUpgrade theOwner = do
     debugRaw ("Creating upgrade proposal for: " <> show owner)
     submit theOwner $ createCmd (UpgradeCarbonCertProposal theOwner owner)
   pure ("Success")
+
+
+queryUpgrade : Party -> Script [(ContractId UpgradeCarbonCertProposal, UpgradeCarbonCertProposal)]
+queryUpgrade theOwner = do
+  certs <- query @UpgradeCarbonCertProposal theOwner
+  pure( certs )

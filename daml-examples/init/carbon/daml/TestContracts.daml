@@ -11,3 +11,8 @@ createContracts = do
     bobProposal <- submit alice $ createCmd (CarbonCertProposal alice bob 10)
     submit bob $ exerciseCmd bobProposal CarbonCertProposal_Accept
     pure (alice)
+
+queryContracts : Party -> Script [(ContractId CarbonCert, CarbonCert)]
+queryContracts theOwner = do
+    certs <- query @CarbonCert theOwner
+    pure( certs )
