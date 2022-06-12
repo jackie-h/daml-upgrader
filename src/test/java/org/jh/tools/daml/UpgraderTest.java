@@ -77,7 +77,15 @@ public class UpgraderTest
         }
         finally
         {
-            sandbox.destroyForcibly();
+            try
+            {
+                sandbox.descendants().forEach(ProcessHandle::destroy);
+                sandbox.destroyForcibly().waitFor(10, TimeUnit.SECONDS);
+            }
+            catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
         }
 
     }
