@@ -12,7 +12,7 @@ template UpgradeCarbonCertProposal
     observer owner
     key (issuer, owner) : (Party, Party)
     maintainer key._1
-    choice Accept : ContractId UpgradeCarbonCertAgreement
+    choice UpgradeCarbonCertProposal_Accept : ContractId UpgradeCarbonCertAgreement
       controller owner
       do create UpgradeCarbonCertAgreement with ..
 

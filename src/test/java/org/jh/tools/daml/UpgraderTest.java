@@ -55,8 +55,19 @@ public class UpgraderTest
             //Bob accepts the proposal
             execCmd("daml script --dar daml-examples/init/carbon/.daml/dist/test-contracts-1.0.0.dar --script-name TestContracts:createContracts --ledger-host localhost --ledger-port 6865 --output-file=target/parties.json");
 
+            Path pathContracts = Paths.get("target", "parties.json");
+            byte[] encoded = Files.readAllBytes(pathContracts);
+            String content = new String(encoded, StandardCharsets.UTF_8);
+            content = content.replace("[", "");
+            content = content.replace("]", "");
+            String[] partiesSplit = content.split(", ");
+            Path pathAlice = Paths.get("target", "alice.json");
+            Path pathBob = Paths.get("target", "bob.json");
+            Files.writeString(pathAlice, partiesSplit[0]);
+            Files.writeString(pathBob, partiesSplit[1]);
+
             //Query contracts V1
-            execCmd("daml script --dar daml-examples/init/carbon/.daml/dist/test-contracts-1.0.0.dar --script-name TestContracts:queryContracts --ledger-host localhost --ledger-port 6865 --input-file=target/parties.json --output-file=target/contracts.json");
+            execCmd("daml script --dar daml-examples/init/carbon/.daml/dist/test-contracts-1.0.0.dar --script-name TestContracts:queryContracts --ledger-host localhost --ledger-port 6865 --input-file=target/alice.json --output-file=target/contracts.json");
 
             String parties = execCmd("daml ledger list-parties --host localhost --port 6865");
 
@@ -79,14 +90,18 @@ public class UpgraderTest
             });
 
 
-            //Alice initiaties an upgrade
-            execCmd("daml script --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --script-name InitiateUpgrade:initiateUpgrade --ledger-host localhost --ledger-port 6865 --input-file=target/parties.json");
+            //Alice initiaties an upgrade by creating proposals
+            execCmd("daml script --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --script-name InitiateUpgrade:initiateUpgrade --ledger-host localhost --ledger-port 6865 --input-file=target/alice.json");
 
             //Query for contracts
-            execCmd("daml script --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --script-name InitiateUpgrade:queryUpgrade --ledger-host localhost --ledger-port 6865 --input-file=target/parties.json --output-file=target/contracts.json");
+            execCmd("daml script --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --script-name InitiateUpgrade:queryUpgrade --ledger-host localhost --ledger-port 6865 --input-file=target/alice.json --output-file=target/contracts.json");
             String outUpgrades = readContractsFile();
 
+            //Bob accepts the proposal
+            execCmd("daml script --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --script-name AcceptUpgradeProposal:acceptUpgrade --ledger-host localhost --ledger-port 6865 --input-file=target/bob.json");
+
             //Wait for trigger to do it's stuff
+            //Trigger should do the upgrade for Bob
             try
             {
                 TimeUnit.MILLISECONDS.sleep(5000);
@@ -97,7 +112,7 @@ public class UpgraderTest
             }
 
             //Query for V1 contracts again
-            execCmd("daml script --dar daml-examples/init/carbon/.daml/dist/test-contracts-1.0.0.dar --script-name TestContracts:queryContracts --ledger-host localhost --ledger-port 6865 --input-file=target/parties.json --output-file=target/contracts.json");
+            execCmd("daml script --dar daml-examples/init/carbon/.daml/dist/test-contracts-1.0.0.dar --script-name TestContracts:queryContracts --ledger-host localhost --ledger-port 6865 --input-file=target/alice.json --output-file=target/contracts.json");
             String outCarbonNow = readContractsFile();
 
             completableFuture.cancel(true);

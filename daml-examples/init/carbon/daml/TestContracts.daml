@@ -3,14 +3,14 @@ module TestContracts where
 import Daml.Script
 import Carbon
 
-createContracts : Script Party
+createContracts : Script [Party]
 createContracts = do
     alice <- allocateParty "alice"
     bob <- allocateParty "bob"
 
     bobProposal <- submit alice $ createCmd (CarbonCertProposal alice bob 10)
     submit bob $ exerciseCmd bobProposal CarbonCertProposal_Accept
-    pure (alice)
+    pure ( [ alice, bob] )
 
 queryContracts : Party -> Script [(ContractId CarbonCert, CarbonCert)]
 queryContracts theOwner = do

@@ -1,0 +1,12 @@
+module AcceptUpgradeProposal where
+
+import Daml.Script
+import UpgradeCarbon
+import DA.Foldable (forA_)
+
+acceptUpgrade : Party -> Script Text
+acceptUpgrade theOwner = do
+    theUpgradeContracts <- query @UpgradeCarbonCertProposal theOwner
+    forA_ theUpgradeContracts $ \(_cid, c) -> do
+        submit theOwner $ exerciseCmd _cid UpgradeCarbonCertProposal_Accept
+    pure ("Success")
