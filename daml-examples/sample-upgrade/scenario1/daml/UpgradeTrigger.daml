@@ -9,7 +9,7 @@ upgradeTrigger : Trigger ()
 upgradeTrigger = Trigger with
   initialize = pure ()
   updateState = \_msg -> pure ()
-  registeredTemplates = AllInDar
+  registeredTemplates = RegisteredTemplates [registeredTemplate @UpgradeCarbonCertProposal]
   heartbeat = None
   rule = triggerRule
 

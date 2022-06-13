@@ -68,6 +68,7 @@ public class UpgraderTest
 
             //Query contracts V1
             execCmd("daml script --dar daml-examples/init/carbon/.daml/dist/test-contracts-1.0.0.dar --script-name TestContracts:queryContracts --ledger-host localhost --ledger-port 6865 --input-file=target/alice.json --output-file=target/contracts.json");
+            String outCarbonFirst = readContractsFile();
 
             String parties = execCmd("daml ledger list-parties --host localhost --port 6865");
 
@@ -80,7 +81,7 @@ public class UpgraderTest
             CompletableFuture<String> completableFuture = CompletableFuture.supplyAsync(() -> {
                 try
                 {
-                    return execCmd("daml trigger --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --trigger-name UpgradeTrigger:upgradeTrigger --ledger-host localhost --ledger-port 6865 --ledger-party=bob");
+                    return execCmd("daml trigger --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --trigger-name UpgradeTrigger:upgradeTrigger --ledger-host localhost --ledger-port 6865 --ledger-party=alice");
                 }
                 catch (IOException e)
                 {
