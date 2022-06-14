@@ -15,12 +15,15 @@ upgradeTrigger = Trigger with
 
 triggerRule : Party -> TriggerA () ()
 triggerRule issuer = do
+  debugRaw ("Triggering rule for: " <> show issuer)
   agreements <-
     filter (\(_cid, agreement) -> agreement.issuer == issuer) <$>
     query @UpgradeCarbonCertAgreement
+  debugRaw ("Agreements found : " <> show agreements)
   allCerts <-
     filter (\(_cid, cert) -> cert.issuer == issuer) <$>
     query @CarbonV1.CarbonCert
+  debugRaw ("Certs found : " <> show allCerts)
   forA_ agreements $ \(agreementCid, agreement) -> do
     let certsForOwner = filter (\(_cid, cert) -> cert.owner == agreement.owner) allCerts
     forA_ certsForOwner $ \(certCid, _) ->

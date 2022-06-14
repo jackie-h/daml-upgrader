@@ -100,6 +100,9 @@ public class UpgraderTest
 
             //Bob accepts the proposal
             execCmd("daml script --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --script-name AcceptUpgradeProposal:acceptUpgrade --ledger-host localhost --ledger-port 6865 --input-file=target/bob.json");
+            //Query for agreements
+            execCmd("daml script --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --script-name AcceptUpgradeProposal:queryUpgradeAgreement --ledger-host localhost --ledger-port 6865 --input-file=target/alice.json --output-file=target/contracts.json");
+            String agreements = readContractsFile();
 
             //Wait for trigger to do it's stuff
             //Trigger should do the upgrade for Bob

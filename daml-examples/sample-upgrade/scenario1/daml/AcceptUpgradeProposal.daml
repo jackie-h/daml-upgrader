@@ -10,3 +10,9 @@ acceptUpgrade theOwner = do
     forA_ theUpgradeContracts $ \(_cid, c) -> do
         submit theOwner $ exerciseCmd _cid UpgradeCarbonCertProposal_Accept
     pure ("Success")
+
+
+queryUpgradeAgreement : Party -> Script [(ContractId UpgradeCarbonCertAgreement, UpgradeCarbonCertAgreement)]
+queryUpgradeAgreement theOwner = do
+  certs <- query @UpgradeCarbonCertAgreement theOwner
+  pure( certs )
