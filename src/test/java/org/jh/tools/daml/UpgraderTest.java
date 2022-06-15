@@ -81,7 +81,7 @@ public class UpgraderTest
             CompletableFuture<String> completableFuture = CompletableFuture.supplyAsync(() -> {
                 try
                 {
-                    return execCmd("daml trigger --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --trigger-name UpgradeTrigger:upgradeTrigger --ledger-host localhost --ledger-port 6865 --ledger-party=alice");
+                    return execCmd("daml trigger --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --trigger-name UpgradeTrigger:upgradeTrigger --ledger-host localhost --ledger-port 6865 --ledger-user=alice");
                 }
                 catch (IOException e)
                 {
@@ -118,6 +118,7 @@ public class UpgraderTest
             //Query for V1 contracts again
             execCmd("daml script --dar daml-examples/init/carbon/.daml/dist/test-contracts-1.0.0.dar --script-name TestContracts:queryContracts --ledger-host localhost --ledger-port 6865 --input-file=target/alice.json --output-file=target/contracts.json");
             String outCarbonNow = readContractsFile();
+            Assert.assertEquals("No V1 templates found", "[]\n", outCarbonNow);
 
             completableFuture.cancel(true);
         }
