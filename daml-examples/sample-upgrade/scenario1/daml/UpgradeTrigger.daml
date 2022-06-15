@@ -9,7 +9,7 @@ upgradeTrigger : Trigger ()
 upgradeTrigger = Trigger with
   initialize = pure ()
   updateState = \_msg -> pure ()
-  registeredTemplates = RegisteredTemplates [registeredTemplate @UpgradeCarbonCertAgreement]
+  registeredTemplates = RegisteredTemplates [registeredTemplate @UpgradeCarbonCertAgreement, registeredTemplate @CarbonV1.CarbonCert]
   heartbeat = None
   rule = triggerRule
 
@@ -21,7 +21,6 @@ triggerRule issuer = do
     query @UpgradeCarbonCertAgreement
   debugRaw ("Agreements found : " <> show agreements)
   allCerts <-
-    filter (\(_cid, cert) -> cert.issuer == issuer) <$>
     query @CarbonV1.CarbonCert
   debugRaw ("Certs found : " <> show allCerts)
   forA_ agreements $ \(agreementCid, agreement) -> do
