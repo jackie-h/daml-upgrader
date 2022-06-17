@@ -20,6 +20,11 @@
             <version>2.2.0</version>
         </dependency>
         <dependency>
+            <groupId>com.daml</groupId>
+            <artifactId>bindings-rxjava</artifactId>
+            <version>2.2.0</version>
+        </dependency>
+        <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>stringtemplate</artifactId>
             <version>4.0.2</version>

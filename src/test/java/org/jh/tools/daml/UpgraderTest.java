@@ -55,6 +55,7 @@ public class UpgraderTest
             //Bob accepts the proposal
             execCmd("daml script --dar daml-examples/init/carbon/.daml/dist/test-contracts-1.0.0.dar --script-name TestContracts:createContracts --ledger-host localhost --ledger-port 6865 --output-file=target/parties.json");
 
+
             Path pathContracts = Paths.get("target", "parties.json");
             byte[] encoded = Files.readAllBytes(pathContracts);
             String content = new String(encoded, StandardCharsets.UTF_8);
@@ -63,8 +64,12 @@ public class UpgraderTest
             String[] partiesSplit = content.split(", ");
             Path pathAlice = Paths.get("target", "alice.json");
             Path pathBob = Paths.get("target", "bob.json");
+            String aliceId = partiesSplit[0].replace("\"", "");
             Files.writeString(pathAlice, partiesSplit[0]);
             Files.writeString(pathBob, partiesSplit[1]);
+
+            DamlLedgerQuery client = DamlLedgerQuery.createDamlLedgerQuery("localhost", 6865);
+            int active = client.queryActiveContracts(aliceId);
 
             //Query contracts V1
             execCmd("daml script --dar daml-examples/init/carbon/.daml/dist/test-contracts-1.0.0.dar --script-name TestContracts:queryContracts --ledger-host localhost --ledger-port 6865 --input-file=target/alice.json --output-file=target/contracts.json");
