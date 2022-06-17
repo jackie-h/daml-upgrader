@@ -4,7 +4,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -18,39 +17,34 @@ import static org.junit.Assert.fail;
 
 public class UpgraderEndToEndTest
 {
-    private void cleanBuildDar(String directory) throws IOException
-    {
-        File dir = Paths.get(directory).toFile();
-        execCmd("daml clean",  dir);
-        execCmd("daml build --log-level ERROR",  dir);
-    }
+
 
     @Test
     public void testEndToEnd() throws IOException
     {
         //cleanBuildDar("daml-examples/init/parties");
-        cleanBuildDar("daml-examples/scenario1/v1");
-        cleanBuildDar("daml-examples/scenario1/v2");
-        cleanBuildDar("daml-examples/init/carbon");
-        cleanBuildDar("daml-examples/sample-upgrade/scenario1");
+        DamlCommand.cleanBuildDar("daml-examples/scenario1/v1");
+        DamlCommand.cleanBuildDar("daml-examples/scenario1/v2");
+        DamlCommand.cleanBuildDar("daml-examples/init/carbon");
+        DamlCommand.cleanBuildDar("daml-examples/sample-upgrade/scenario1");
 
         Process sandbox = startSandbox();
 
         try
         {
 
-            String partiesStart = execCmd("daml ledger list-parties --host localhost --port 6865");
+            String partiesStart = DamlCommand.exec("daml ledger list-parties --host localhost --port 6865");
             Assert.assertTrue(partiesStart.startsWith("Listing parties at localhost:6865"));
             Assert.assertEquals("Only one party", partiesStart.indexOf("PartyDetail"), partiesStart.lastIndexOf("PartyDetail"));
 
             //It is somewhat unwieldy to set-up parties first and get them back later - https://blog.digitalasset.com/developers/parties-users-daml-2
-            //execCmd("daml script --dar daml-examples/init/parties/.daml/dist/init-1.0.0.dar --script-name Parties:allocateParties --ledger-host localhost --ledger-port 6865");
+            //DamlCommand.execCmd("daml script --dar daml-examples/init/parties/.daml/dist/init-1.0.0.dar --script-name Parties:allocateParties --ledger-host localhost --ledger-port 6865");
 
-            execCmd("daml ledger upload-dar daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar --host localhost --port 6865");
+            DamlCommand.exec("daml ledger upload-dar daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar --host localhost --port 6865");
 
             //Alice creates a CarbonCertProposal for a CarbonCert with issuer Alice and owner Bob
             //Bob accepts the proposal
-            execCmd("daml script --dar daml-examples/init/carbon/.daml/dist/test-contracts-1.0.0.dar --script-name TestContracts:createContracts --ledger-host localhost --ledger-port 6865 --output-file=target/parties.json");
+            DamlCommand.exec("daml script --dar daml-examples/init/carbon/.daml/dist/test-contracts-1.0.0.dar --script-name TestContracts:createContracts --ledger-host localhost --ledger-port 6865 --output-file=target/parties.json");
 
 
             Path pathContracts = Paths.get("target", "parties.json");
@@ -69,21 +63,21 @@ public class UpgraderEndToEndTest
             int active = client.queryActiveContracts(aliceId);
 
             //Query contracts V1
-            execCmd("daml script --dar daml-examples/init/carbon/.daml/dist/test-contracts-1.0.0.dar --script-name TestContracts:queryContracts --ledger-host localhost --ledger-port 6865 --input-file=target/alice.json --output-file=target/contracts.json");
+            DamlCommand.exec("daml script --dar daml-examples/init/carbon/.daml/dist/test-contracts-1.0.0.dar --script-name TestContracts:queryContracts --ledger-host localhost --ledger-port 6865 --input-file=target/alice.json --output-file=target/contracts.json");
             String outCarbonFirst = readContractsFile();
 
-            String parties = execCmd("daml ledger list-parties --host localhost --port 6865");
+            String parties = DamlCommand.exec("daml ledger list-parties --host localhost --port 6865");
 
             Assert.assertTrue(parties.contains("\"bob\""));
 
             //Upload the upgrade code
-            execCmd("daml ledger upload-dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --host localhost --port 6865");
+            DamlCommand.exec("daml ledger upload-dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --host localhost --port 6865");
 
             //Create the trigger for Bob
             CompletableFuture<String> completableFuture = CompletableFuture.supplyAsync(() -> {
                 try
                 {
-                    return execCmd("daml trigger --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --trigger-name UpgradeTrigger:upgradeTrigger --ledger-host localhost --ledger-port 6865 --ledger-user=alice");
+                    return DamlCommand.exec("daml trigger --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --trigger-name UpgradeTrigger:upgradeTrigger --ledger-host localhost --ledger-port 6865 --ledger-user=alice");
                 }
                 catch (IOException e)
                 {
@@ -94,16 +88,16 @@ public class UpgraderEndToEndTest
 
 
             //Alice initiaties an upgrade by creating proposals
-            execCmd("daml script --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --script-name InitiateUpgrade:initiateUpgrade --ledger-host localhost --ledger-port 6865 --input-file=target/alice.json");
+            DamlCommand.exec("daml script --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --script-name InitiateUpgrade:initiateUpgrade --ledger-host localhost --ledger-port 6865 --input-file=target/alice.json");
 
             //Query for contracts
-            execCmd("daml script --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --script-name InitiateUpgrade:queryUpgrade --ledger-host localhost --ledger-port 6865 --input-file=target/alice.json --output-file=target/contracts.json");
+            DamlCommand.exec("daml script --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --script-name InitiateUpgrade:queryUpgrade --ledger-host localhost --ledger-port 6865 --input-file=target/alice.json --output-file=target/contracts.json");
             String outUpgrades = readContractsFile();
 
             //Bob accepts the proposal
-            execCmd("daml script --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --script-name AcceptUpgradeProposal:acceptUpgrade --ledger-host localhost --ledger-port 6865 --input-file=target/bob.json");
+            DamlCommand.exec("daml script --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --script-name AcceptUpgradeProposal:acceptUpgrade --ledger-host localhost --ledger-port 6865 --input-file=target/bob.json");
             //Query for agreements
-            execCmd("daml script --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --script-name AcceptUpgradeProposal:queryUpgradeAgreement --ledger-host localhost --ledger-port 6865 --input-file=target/alice.json --output-file=target/contracts.json");
+            DamlCommand.exec("daml script --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --script-name AcceptUpgradeProposal:queryUpgradeAgreement --ledger-host localhost --ledger-port 6865 --input-file=target/alice.json --output-file=target/contracts.json");
             String agreements = readContractsFile();
 
             //Wait for trigger to do it's stuff
@@ -118,7 +112,7 @@ public class UpgraderEndToEndTest
             }
 
             //Query for V1 contracts again
-            execCmd("daml script --dar daml-examples/init/carbon/.daml/dist/test-contracts-1.0.0.dar --script-name TestContracts:queryContracts --ledger-host localhost --ledger-port 6865 --input-file=target/alice.json --output-file=target/contracts.json");
+            DamlCommand.exec("daml script --dar daml-examples/init/carbon/.daml/dist/test-contracts-1.0.0.dar --script-name TestContracts:queryContracts --ledger-host localhost --ledger-port 6865 --input-file=target/alice.json --output-file=target/contracts.json");
             String outCarbonNow = readContractsFile();
             Assert.assertEquals("No V1 templates found", "[]\n", outCarbonNow);
 
@@ -202,46 +196,5 @@ public class UpgraderEndToEndTest
         return proc;
     }
 
-    public static String execCmd(String cmd) throws IOException
-    {
-        return execCmd(cmd, null);
-    }
-
-    public static String execCmd(String cmd, File dir) throws IOException
-    {
-        String result = null;
-        Process proc = (dir == null) ? Runtime.getRuntime().exec(cmd): Runtime.getRuntime().exec(cmd, new String[]{}, dir);
-        BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-        BufferedReader stdError = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
-        boolean exited = false;
-        try
-        {
-            exited = proc.waitFor(10, TimeUnit.SECONDS);
-        }
-        catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
-
-
-
-        //proc.getOutputStream()
-
-        // Read any errors from the attempted command
-        StringBuilder err = new StringBuilder();
-        String e = null;
-        while (stdError.ready() && (e = stdError.readLine()) != null) {
-            err.append(e).append("\n");
-        }
-        Assert.assertEquals("", err.toString());
-
-        // Read the output from the command
-        String s = null;
-        StringBuilder out = new StringBuilder();
-        while ((s = stdInput.readLine()) != null) {
-            out.append(s).append("\n");
-        }
-
-        return out.toString();
-    }
+    
 }
