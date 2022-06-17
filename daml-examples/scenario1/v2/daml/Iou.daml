@@ -1,0 +1,15 @@
+module Iou where
+
+template Iou
+  with
+    issuer : Party
+    owner : Party
+    currency : Text
+    amount : Decimal
+    observers : [Party]
+  where
+    ensure amount > 0.0
+
+    signatory issuer, owner
+
+    observer observers
