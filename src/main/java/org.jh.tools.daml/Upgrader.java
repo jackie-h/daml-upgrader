@@ -37,11 +37,11 @@ public class Upgrader
         LOGGER.info(archiveCurrent.getHash());
         LOGGER.info(archiveNew.getHash());
 
-//        if (archiveCurrent.getHash().equals(archiveNew.getHash()))
-//        {
-//            LOGGER.info("Contents identical nothing to do");
-//            return new ArrayList<>();
-//        }
+        if (archiveCurrent.getHash().equals(archiveNew.getHash()))
+        {
+            LOGGER.info("Contents identical nothing to do");
+            return new HashMap<>();
+        }
 
         ArchivePayload payloadCurrent = Reader.readArchive(archiveCurrent).right().get();
         ArchivePayload payloadNew = Reader.readArchive(archiveNew).right().get();
