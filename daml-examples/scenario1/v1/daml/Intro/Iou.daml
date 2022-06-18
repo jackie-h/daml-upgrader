@@ -1,4 +1,4 @@
-module Iou where
+module Intro.Iou where
 
 template Iou
   with
