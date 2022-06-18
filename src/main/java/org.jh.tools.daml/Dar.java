@@ -17,13 +17,13 @@ public class Dar
 
     private final String name;
     private final Map<String,String> sources;
-    private final DamlLf.Archive damlLf;
+    private final Map<String,DamlLf.Archive> damlLfArchivesByHash;
 
-    public Dar(String name, Map<String, String> sources, DamlLf.Archive damlLf)
+    public Dar(String name, Map<String, String> sources, Map<String,DamlLf.Archive> damlLfArchivesByHash)
     {
         this.name = name;
         this.sources = sources;
-        this.damlLf = damlLf;
+        this.damlLfArchivesByHash = damlLfArchivesByHash;
     }
 
     public static Dar readDar(String filePath)
@@ -33,6 +33,7 @@ public class Dar
         String darNameWithoutExtension = darName.replace(".dar", "");
         DamlLf.Archive archiveProto = null;
         Map<String,String> sources = new HashMap<>();
+        Map<String,DamlLf.Archive> archives = new HashMap<>();
 
         try(ZipInputStream is = new ZipInputStream(java.nio.file.Files.newInputStream(path)))
         {
@@ -51,6 +52,7 @@ public class Dar
                 {
                     byte[] bytes = is.readAllBytes();
                     archiveProto = DamlLf.Archive.parseFrom(bytes);
+                    archives.put(archiveProto.getHash(), archiveProto);
                     LOGGER.info(archiveProto.getHash());
                 }
                 else if (itemName.endsWith(".daml"))
@@ -60,7 +62,7 @@ public class Dar
                 }
             }
 
-            return new Dar(darName, sources, archiveProto);
+            return new Dar(darName, sources, archives);
         }
         catch (IOException e)
         {
@@ -81,8 +83,21 @@ public class Dar
         return sources;
     }
 
+    public Map<String,DamlLf.Archive> getDamlLfArchivesByHash()
+    {
+        return this.damlLfArchivesByHash;
+    }
+
+    //Most Dar files have a singular
     public DamlLf.Archive getDamlLf()
     {
-        return damlLf;
+        if (this.damlLfArchivesByHash.keySet().size() != 1)
+        {
+            throw new RuntimeException("The number of archives is not 1");
+        }
+        else
+        {
+            return this.damlLfArchivesByHash.values().iterator().next();
+        }
     }
 }

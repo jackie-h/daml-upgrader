@@ -25,16 +25,19 @@ public class DamlLfProtoUtils
             Map<String, DamlLf1.DefTemplate> templatesTwo = moduleTemplatesTwo.get(moduleName);
             List<String> changed = new ArrayList<>();
 
-            for (String templateName : templatesOne.keySet())
+            if (templatesTwo != null)
             {
-                DamlLf1.DefTemplate template1 = templatesOne.get(templateName);
-                DamlLf1.DefTemplate template2 = templatesTwo.get(templateName);
-
-                if (template2 != null)
+                for (String templateName : templatesOne.keySet())
                 {
-                    if (!templatesEqualIgnoreLocation(template1, template2))
+                    DamlLf1.DefTemplate template1 = templatesOne.get(templateName);
+                    DamlLf1.DefTemplate template2 = templatesTwo.get(templateName);
+
+                    if (template2 != null)
                     {
-                        changed.add(templateName);
+                        if (!templatesEqualIgnoreLocation(template1, template2))
+                        {
+                            changed.add(templateName);
+                        }
                     }
                 }
             }
