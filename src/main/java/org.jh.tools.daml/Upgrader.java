@@ -57,7 +57,6 @@ public class Upgrader
         Map<String, List<Module>> upgradesByModule = new HashMap<>();
         for(String moduleName : upgrades.keySet())
         {
-
             List<String> contractNames = upgrades.get(moduleName);
             List<Module> contracts = UpgradeTemplate.createUpgradeTemplatesContent(moduleName, contractNames);
             upgradesByModule.put(moduleName, contracts);
@@ -76,7 +75,7 @@ public class Upgrader
 
     private static void writeUpgradeToFiles(String moduleName, List<Module> modules, String outpath)
     {
-        String directory = outpath + "/" + moduleName + "/";
+        String directory = outpath + "/daml/" + moduleName + "/";
         try
         {
             Files.createDirectories(Paths.get(directory));

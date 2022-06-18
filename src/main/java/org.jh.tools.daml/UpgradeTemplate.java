@@ -7,7 +7,7 @@ import java.util.List;
 
 public class UpgradeTemplate
 {
-    private static final String UPGRADE_TEMPLATE = "module Upgrade<contract_name> where\n" +
+    private static final String UPGRADE_TEMPLATE = "module <module_name>.Upgrade<contract_name> where\n" +
             "\n" +
             "import qualified V1.<module_name> as <module_name>V1\n" +
             "import qualified V2.<module_name> as <module_name>V2\n" +
