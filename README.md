@@ -67,6 +67,24 @@ A template "Foo" in module "Bar" will be identified as (Foo,Bar,<DALF hash>)
 
 [DAML Docs:How DAML translates to DALF Protobufs](https://docs.daml.com/app-dev/grpc/daml-to-ledger-api.html#how-daml-types-are-translated-to-protobuf)
 
+The DAML YAML file defines the DAR file
+
+[DAML Docs:Config daml.yaml](https://docs.daml.com/tools/assistant.html#configuration-files)
+
+There is a single DALF file created for each DAML project, regardless of number of modules.
+
+The DAR file will contain the DALF for the project and the project dependencies.
+
+For the standard library, daml creates individual DALF files for modules.
+
+See [Git Commit - Structure stable packages](https://github.com/digital-asset/daml/commit/0be64a8dd07cc814bdd492489f429dc31d16dc70)
+
+>       val ArithmeticError: StablePackage = build(
+>        "DA.Exception.ArithmeticError",
+>        "cb0552debf219cc909f51cbb5c3b41e9981d39f8f645b1f35e2ef5be2e0b858a",
+>        "daml-prim",
+>      )
+
 ##Versioning
 
 DAML follows semantic versioning
