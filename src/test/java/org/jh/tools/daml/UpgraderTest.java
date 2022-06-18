@@ -22,27 +22,27 @@ public class UpgraderTest
     @Test
     public void testScenario1()
     {
-        Map<String, List<String>> modulesResult = Upgrader.createUpgrades("daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar",
+        Map<String, List<Module>> modulesResult = Upgrader.createUpgrades("daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar",
                 "daml-examples/scenario1/v2/.daml/dist/carbon-2.0.0.dar",
                 "target");
 
         Assert.assertEquals(2, modulesResult.keySet().size());
 
-        List<String> result = modulesResult.get("Carbon");
+        List<Module> result = modulesResult.get("Carbon");
 
         Assert.assertEquals(2, result.size());
-        Assert.assertTrue(result.contains("CarbonCert"));
-        Assert.assertTrue(result.contains("CarbonCertProposal"));
+        Assert.assertEquals("UpgradeCarbonCertProposal", result.get(0).getName());
+        Assert.assertEquals("UpgradeCarbonCert", result.get(1).getName());
 
-        List<String> intro = modulesResult.get("Intro.Iou");
+        List<Module> intro = modulesResult.get("Intro.Iou");
         Assert.assertEquals(1, intro.size());
-        Assert.assertTrue(intro.contains("Iou"));
+        Assert.assertEquals("UpgradeIou", intro.get(0).getName());
     }
 
     @Test
     public void testSameDarFileProducesNoChange()
     {
-        Map<String, List<String>> result = Upgrader.createUpgrades("daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar",
+        Map<String, List<Module>> result = Upgrader.createUpgrades("daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar",
                 "daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar",
                 "target");
 
@@ -59,7 +59,7 @@ public class UpgraderTest
         Assert.assertEquals("Files with same contents should have the same hash",
                 dar1.getDamlLf().getHash(), dar2.getDamlLf().getHash());
 
-        Map<String, List<String>> result = Upgrader.createUpgrades(darPath1, darPath2, "target");
+        Map<String, List<Module>> result = Upgrader.createUpgrades(darPath1, darPath2, "target");
 
         Assert.assertEquals(0, result.size());
     }

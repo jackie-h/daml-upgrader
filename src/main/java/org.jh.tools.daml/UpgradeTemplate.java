@@ -2,9 +2,8 @@ package org.jh.tools.daml;
 
 import org.stringtemplate.v4.ST;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class UpgradeTemplate
 {
@@ -48,15 +47,15 @@ public class UpgradeTemplate
             "           carbon_metric_tons = cert.carbon_metric_tons\n" +
             "           carbon_offset_method = \"unknown\"";
 
-    public static Map<String, String> createUpgradeTemplatesContent(String moduleName, List<String> contractNames)
+    public static List<Module> createUpgradeTemplatesContent(String moduleName, List<String> contractNames)
     {
-        Map<String,String> contracts = new HashMap<>();
+        List<Module> contracts = new ArrayList<>();
 
         for(String contractName: contractNames)
         {
             String upgradeTemplate = createUpgradeTemplate(moduleName, contractName);
             String upgradeModuleName = "Upgrade" + contractName;
-            contracts.put(upgradeModuleName, upgradeTemplate);
+            contracts.add(new Module(upgradeModuleName, upgradeTemplate));
         }
         return contracts;
     }

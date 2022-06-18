@@ -17,7 +17,7 @@ public class Upgrader
 {
     private static final Logger LOGGER =  Logger.getLogger(Upgrader.class.getName());
 
-    public static Map<String, List<String>> createUpgrades(String currentArchivePath, String newArchivePath, String outputPath)
+    public static Map<String, List<Module>> createUpgrades(String currentArchivePath, String newArchivePath, String outputPath)
     {
         LOGGER.info("Starting upgrade");
         LOGGER.info("Current Archive Path=" + currentArchivePath);
@@ -26,8 +26,9 @@ public class Upgrader
         DamlLf.Archive archiveOld = Dar.readDar(currentArchivePath).getDamlLf();
         DamlLf.Archive archiveNew = Dar.readDar(newArchivePath).getDamlLf();
 
-        Map<String, List<String>> upgrades = identifyTemplatesToUpgrade(archiveOld, archiveNew);
-        createAndWriteUpgradesToFiles(upgrades, outputPath);
+        Map<String, List<String>> upgradeTemplateNamesByModule = identifyTemplatesToUpgrade(archiveOld, archiveNew);
+        Map<String, List<Module>> upgrades = createUpgradeTemplates(upgradeTemplateNamesByModule);
+        writeUpgradesToFiles(upgrades, outputPath);
         return upgrades;
     }
 
@@ -51,32 +52,43 @@ public class Upgrader
         return DamlLfProtoUtils.findTemplatesThatAreInOneAndInTwo(payloadCurrent.proto(), payloadNew.proto());
     }
 
-    private static void createAndWriteUpgradesToFiles(Map<String,List<String>> upgrades, String outpath)
+    private static Map<String, List<Module>> createUpgradeTemplates(Map<String,List<String>> upgrades)
+    {
+        Map<String, List<Module>> upgradesByModule = new HashMap<>();
+        for(String moduleName : upgrades.keySet())
+        {
+
+            List<String> contractNames = upgrades.get(moduleName);
+            List<Module> contracts = UpgradeTemplate.createUpgradeTemplatesContent(moduleName, contractNames);
+            upgradesByModule.put(moduleName, contracts);
+        }
+        return upgradesByModule;
+    }
+
+    private static void writeUpgradesToFiles(Map<String, List<Module>> upgrades, String outpath)
     {
         for(String moduleName : upgrades.keySet())
         {
-            List<String> contractNames = upgrades.get(moduleName);
-            createAndWriteUpgradeToFiles(moduleName, contractNames, outpath);
+            List<Module> contracts = upgrades.get(moduleName);
+            writeUpgradeToFiles(moduleName, contracts, outpath);
         }
     }
 
-    private static void createAndWriteUpgradeToFiles(String moduleName, List<String> contractNames, String outpath)
+    private static void writeUpgradeToFiles(String moduleName, List<Module> modules, String outpath)
     {
-        java.util.Map<String, String> contracts = UpgradeTemplate.createUpgradeTemplatesContent(moduleName, contractNames);
-
-        for (String upgradeContractName : contracts.keySet())
+        for (Module upgradeModule : modules)
         {
-            String fileName = outpath + "/" + upgradeContractName + ".daml";
+            String fileName = outpath + "/" + upgradeModule.getName() + ".daml";
             Path filePath = Paths.get(fileName);
 
             try
             {
-                Files.writeString(filePath, contracts.get(upgradeContractName));
+                Files.writeString(filePath, upgradeModule.getContents());
             }
             catch (IOException e)
             {
                 e.printStackTrace();
-                throw new RuntimeException("Failed to create contract:" + upgradeContractName);
+                throw new RuntimeException("Failed to create upgrade module:" + upgradeModule.getName());
             }
         }
     }
