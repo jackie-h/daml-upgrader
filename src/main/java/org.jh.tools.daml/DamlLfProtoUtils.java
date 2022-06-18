@@ -11,6 +11,38 @@ import java.util.Map;
 
 public class DamlLfProtoUtils
 {
+    public static Map<String,List<String>> findTemplatesThatAreInOneAndInTwo(DamlLf.ArchivePayload one, DamlLf.ArchivePayload two)
+    {
+        Map<String,List<String>> moduleTemplates = new HashMap<>();
+
+        Map<String, Map<String, DamlLf1.DefTemplate>> moduleTemplatesOne = collectTemplates(one.getDamlLf1());
+        Map<String, Map<String, DamlLf1.DefTemplate>> moduleTemplatesTwo = collectTemplates(two.getDamlLf1());
+
+        for(String moduleName: moduleTemplatesOne.keySet())
+        {
+            Map<String, DamlLf1.DefTemplate> templatesOne = moduleTemplatesOne.get(moduleName);
+            Map<String, DamlLf1.DefTemplate> templatesTwo = moduleTemplatesTwo.get(moduleName);
+            List<String> templates = new ArrayList<>();
+
+            if (templatesTwo != null)
+            {
+                for (String templateName : templatesOne.keySet())
+                {
+                    DamlLf1.DefTemplate template2 = templatesTwo.get(templateName);
+                    if (template2 != null)
+                    {
+                        templates.add(templateName);
+                    }
+                }
+            }
+            if(!templates.isEmpty())
+            {
+                moduleTemplates.put(moduleName, templates);
+            }
+        }
+
+        return moduleTemplates;
+    }
 
     public static Map<String,List<String>> findTemplatesThatAreInOneButDifferentInTwo(DamlLf.ArchivePayload one, DamlLf.ArchivePayload two)
     {
@@ -58,15 +90,25 @@ public class DamlLfProtoUtils
             Map<String, DamlLf1.DefTemplate> result = new HashMap<>();
             for(DamlLf1.DefTemplate template: module.getTemplatesList())
             {
-                List<Integer> internedStrs = _package.getInternedDottedNames(template.getTyconInternedDname()).getSegmentsInternedStrList();
-                if(internedStrs.size() != 1) throw new RuntimeException("Not handled yet");
-                String name = _package.getInternedStrings(internedStrs.get(0));
+                String name = getName(_package, template.getTyconInternedDname());
                 result.put(name, template);
             }
-            String moduleName = _package.getInternedStrings(_package.getInternedDottedNames(module.getNameInternedDname()).getSegmentsInternedStrList().get(0));
+            String moduleName = getName(_package, module.getNameInternedDname());
             moduleTemplates.put(moduleName, result);
         }
         return moduleTemplates;
+    }
+
+    private static String getName(DamlLf1.Package _package, int internedDname)
+    {
+        DamlLf1.InternedDottedName iName = _package.getInternedDottedNames(internedDname);
+        List<Integer> segments = iName.getSegmentsInternedStrList();
+        List<String> names = new ArrayList<>();
+        for(Integer segment: segments)
+        {
+            names.add(_package.getInternedStrings(segment));
+        }
+        return String.join(".", names);
     }
 
     private static boolean templatesEqualIgnoreLocation(DamlLf1.DefTemplate one, DamlLf1.DefTemplate two)

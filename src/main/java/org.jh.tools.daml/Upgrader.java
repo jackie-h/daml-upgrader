@@ -48,7 +48,7 @@ public class Upgrader
         LOGGER.info(payloadCurrent.pkgId());
         LOGGER.info(payloadNew.pkgId());
 
-        return DamlLfProtoUtils.findTemplatesThatAreInOneButDifferentInTwo(payloadCurrent.proto(), payloadNew.proto());
+        return DamlLfProtoUtils.findTemplatesThatAreInOneAndInTwo(payloadCurrent.proto(), payloadNew.proto());
     }
 
     private static void createAndWriteUpgradesToFiles(Map<String,List<String>> upgrades, String outpath)

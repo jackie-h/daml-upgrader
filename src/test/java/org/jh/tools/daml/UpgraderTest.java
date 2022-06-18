@@ -26,11 +26,17 @@ public class UpgraderTest
                 "daml-examples/scenario1/v2/.daml/dist/carbon-2.0.0.dar",
                 "target");
 
+        Assert.assertEquals(2, modulesResult.keySet().size());
+
         List<String> result = modulesResult.get("Carbon");
 
         Assert.assertEquals(2, result.size());
         Assert.assertTrue(result.contains("CarbonCert"));
         Assert.assertTrue(result.contains("CarbonCertProposal"));
+
+        List<String> intro = modulesResult.get("Intro.Iou");
+        Assert.assertEquals(1, intro.size());
+        Assert.assertTrue(intro.contains("Iou"));
     }
 
     @Test
