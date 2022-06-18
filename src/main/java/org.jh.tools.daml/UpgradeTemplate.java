@@ -22,9 +22,9 @@ public class UpgradeTemplate
             "    observer owner\n" +
             "    key (issuer, owner) : (Party, Party)\n" +
             "    maintainer key._1\n" +
-            "    choice Accept : ContractId <agreement_contract_name>\n" +
+            "    choice Accept : ContractId Upgrade<contract_name>Agreement\n" +
             "      controller owner\n" +
-            "      do create <agreement_contract_name> with ..\n" +
+            "      do create Upgrade<contract_name>Agreement with ..\n" +
             "\n" +
             "template Upgrade<contract_name>Agreement\n" +
             "  with\n" +
