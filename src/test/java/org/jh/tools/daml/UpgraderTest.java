@@ -15,6 +15,8 @@ public class UpgraderTest
     {
         DamlCommand.cleanBuildDar("daml-examples/scenario1/v1");
         DamlCommand.cleanBuildDar("daml-examples/scenario1/v2");
+        DamlCommand.cleanBuildDar("daml-examples/scenario2/v1");
+        DamlCommand.cleanBuildDar("daml-examples/scenario2/v2");
     }
 
     @Test
