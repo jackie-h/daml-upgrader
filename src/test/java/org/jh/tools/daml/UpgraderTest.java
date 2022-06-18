@@ -24,7 +24,7 @@ public class UpgraderTest
     {
         Map<String, List<Module>> modulesResult = Upgrader.createUpgrades("daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar",
                 "daml-examples/scenario1/v2/.daml/dist/carbon-2.0.0.dar",
-                "target");
+                "target/scenario1");
 
         Assert.assertEquals(2, modulesResult.keySet().size());
 

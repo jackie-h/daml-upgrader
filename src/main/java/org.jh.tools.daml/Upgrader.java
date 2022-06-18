@@ -76,20 +76,21 @@ public class Upgrader
 
     private static void writeUpgradeToFiles(String moduleName, List<Module> modules, String outpath)
     {
-        for (Module upgradeModule : modules)
+        String directory = outpath + "/" + moduleName + "/";
+        try
         {
-            String fileName = outpath + "/" + upgradeModule.getName() + ".daml";
-            Path filePath = Paths.get(fileName);
-
-            try
+            Files.createDirectories(Paths.get(directory));
+            for (Module upgradeModule : modules)
             {
+                String fileName = directory + upgradeModule.getName() + ".daml";
+                Path filePath = Paths.get(fileName);
                 Files.writeString(filePath, upgradeModule.getContents());
             }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-                throw new RuntimeException("Failed to create upgrade module:" + upgradeModule.getName());
-            }
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to create upgrade module:" + moduleName);
         }
     }
 
