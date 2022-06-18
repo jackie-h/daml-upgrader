@@ -1,13 +1,21 @@
 package org.jh.tools.daml;
 
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 public class UpgraderTest
 {
+    @BeforeClass
+    public static void compileDaml() throws IOException
+    {
+        DamlCommand.cleanBuildDar("daml-examples/scenario1/v1");
+        DamlCommand.cleanBuildDar("daml-examples/scenario1/v2");
+    }
 
     @Test
     public void testScenario1()
