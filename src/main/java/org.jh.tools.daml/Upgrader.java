@@ -17,35 +17,35 @@ public class Upgrader
 {
     private static final Logger LOGGER =  Logger.getLogger(Upgrader.class.getName());
 
-    public static Map<String, List<Module>> createUpgrades(String currentArchivePath, String newArchivePath, String outputPath)
+    public static Map<String, List<Module>> createUpgrades(String archivePathFrom, String archivePathTo, String outputPath)
     {
         LOGGER.info("Starting upgrade");
-        LOGGER.info("Current Archive Path=" + currentArchivePath);
-        LOGGER.info("New Archive Path=" + newArchivePath);
+        LOGGER.info("Archive Path From=" + archivePathFrom);
+        LOGGER.info("Archive Path To=" + archivePathTo);
 
-        DamlLf.Archive archiveOld = Dar.readDar(currentArchivePath).getDamlLf();
-        DamlLf.Archive archiveNew = Dar.readDar(newArchivePath).getDamlLf();
+        DamlLf.Archive archiveFrom = Dar.readDar(archivePathFrom).getDamlLf();
+        DamlLf.Archive archiveTo = Dar.readDar(archivePathTo).getDamlLf();
 
-        Map<String, List<String>> upgradeTemplateNamesByModule = identifyTemplatesToUpgrade(archiveOld, archiveNew);
+        Map<String, List<String>> upgradeTemplateNamesByModule = identifyTemplatesToUpgrade(archiveFrom, archiveTo);
         Map<String, List<Module>> upgrades = createUpgradeTemplates(upgradeTemplateNamesByModule);
-        writeUpgradesToFiles(upgrades, outputPath, currentArchivePath, newArchivePath);
+        writeUpgradesToFiles(upgrades, outputPath, archivePathFrom, archivePathTo);
         return upgrades;
     }
 
-    private static Map<String, List<String>> identifyTemplatesToUpgrade(DamlLf.Archive archiveCurrent,
-                                                                        DamlLf.Archive archiveNew)
+    private static Map<String, List<String>> identifyTemplatesToUpgrade(DamlLf.Archive archiveFrom,
+                                                                        DamlLf.Archive archiveTo)
     {
-        LOGGER.info(archiveCurrent.getHash());
-        LOGGER.info(archiveNew.getHash());
+        LOGGER.info(archiveFrom.getHash());
+        LOGGER.info(archiveTo.getHash());
 
-        if (archiveCurrent.getHash().equals(archiveNew.getHash()))
+        if (archiveFrom.getHash().equals(archiveTo.getHash()))
         {
             LOGGER.info("Contents identical nothing to do");
             return new HashMap<>();
         }
 
-        ArchivePayload payloadCurrent = Reader.readArchive(archiveCurrent).right().get();
-        ArchivePayload payloadNew = Reader.readArchive(archiveNew).right().get();
+        ArchivePayload payloadCurrent = Reader.readArchive(archiveFrom).right().get();
+        ArchivePayload payloadNew = Reader.readArchive(archiveTo).right().get();
         LOGGER.info(payloadCurrent.pkgId());
         LOGGER.info(payloadNew.pkgId());
 
@@ -65,11 +65,11 @@ public class Upgrader
     }
 
     private static void writeUpgradesToFiles(Map<String, List<Module>> upgrades, String outpath,
-                                             String currentArchivePath, String newArchivePath)
+                                             String archivePathFrom, String archivePathTo)
     {
-        String archiveNameFrom = getFileNameWithoutExtension(currentArchivePath);
-        String archiveNameTo = getFileNameWithoutExtension(newArchivePath);
-        String projectYaml = UpgradeTemplate.createProjectYaml("2.1.1", archiveNameFrom, archiveNameTo, currentArchivePath, newArchivePath);
+        String archiveNameFrom = getFileNameWithoutExtension(archivePathFrom);
+        String archiveNameTo = getFileNameWithoutExtension(archivePathTo);
+        String projectYaml = UpgradeTemplate.createProjectYaml("2.1.1", archiveNameFrom, archiveNameTo, archivePathFrom, archivePathTo);
 
         try
         {
