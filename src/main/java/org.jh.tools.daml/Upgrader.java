@@ -77,9 +77,9 @@ public class Upgrader
 
         try
         {
-            Path yamlPath = Paths.get(outpath, "daml");
-            Files.createDirectories(yamlPath);
-            Files.writeString(yamlPath.resolve("daml.yaml"), projectYaml);
+            Path outputPath = Paths.get(outpath);
+            Files.createDirectories(outputPath);
+            Files.writeString(outputPath.resolve("daml.yaml"), projectYaml);
         }
         catch (IOException e)
         {
@@ -103,8 +103,9 @@ public class Upgrader
     {
         try
         {
-            Path directory = Paths.get(outpath, "daml", moduleName);
-            Files.createDirectories(Paths.get(outpath, "daml", moduleName));
+            String modulePath = moduleName.replace(".","/");
+            Path directory = Paths.get(outpath, "daml", modulePath);
+            Files.createDirectories(Paths.get(outpath, "daml", modulePath));
             for (Module upgradeModule : modules)
             {
                 Path filePath = directory.resolve(upgradeModule.getName() + ".daml");
