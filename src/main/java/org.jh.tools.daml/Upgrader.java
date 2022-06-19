@@ -69,7 +69,11 @@ public class Upgrader
     {
         String archiveNameFrom = getFileNameWithoutExtension(archivePathFrom);
         String archiveNameTo = getFileNameWithoutExtension(archivePathTo);
-        String projectYaml = UpgradeTemplate.createProjectYaml("2.1.1", archiveNameFrom, archiveNameTo, archivePathFrom, archivePathTo);
+        //todo - make it an option to use direct paths
+        Path relativeArchivePathFrom = Paths.get(outpath).relativize(Paths.get(archivePathFrom));
+        Path relativeArchivePathTo = Paths.get(outpath).relativize(Paths.get(archivePathTo));
+        String projectYaml = UpgradeTemplate.createProjectYaml("2.1.1", archiveNameFrom, archiveNameTo,
+                relativeArchivePathFrom.toString(), relativeArchivePathTo.toString());
 
         try
         {
