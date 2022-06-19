@@ -42,10 +42,7 @@ public class UpgradeTemplate
             "         assert (cert.owner == owner)\n" +
             "         archive certId\n" +
             "         create <module_name>V2.<contract_name> with\n" +
-            "           issuer = cert.issuer\n" +
-            "           owner = cert.owner\n" +
-            "           carbon_metric_tons = cert.carbon_metric_tons\n" +
-            "           carbon_offset_method = \"unknown\"";
+            "<fields:{ field |           <field> = cert.<field>\n }>";
 
     private static final String UPGRADE_PROJECT_YAML = "sdk-version: <sdk_version>\n" +
             "name: upgrade\n" +
@@ -63,24 +60,25 @@ public class UpgradeTemplate
             "  <archive_name_v1>: V1\n" +
             "  <archive_name_v2>: V2\n";
 
-    public static List<Module> createUpgradeTemplatesContent(String moduleName, List<String> contractNames)
+    public static List<Module> createUpgradeTemplatesContent(String moduleName, List<TemplateDetails> contractNames)
     {
         List<Module> contracts = new ArrayList<>();
 
-        for(String contractName: contractNames)
+        for(TemplateDetails templateDetails: contractNames)
         {
-            String upgradeTemplate = createUpgradeTemplate(moduleName, contractName);
-            String upgradeModuleName = "Upgrade" + contractName;
+            String upgradeTemplate = createUpgradeTemplate(moduleName, templateDetails);
+            String upgradeModuleName = "Upgrade" + templateDetails.name();
             contracts.add(new Module(upgradeModuleName, upgradeTemplate));
         }
         return contracts;
     }
 
-    private static String createUpgradeTemplate(String moduleName, String contractName)
+    private static String createUpgradeTemplate(String moduleName, TemplateDetails templateDetails)
     {
         ST upgrade = new ST(UPGRADE_TEMPLATE);
         upgrade.add("module_name", moduleName);
-        upgrade.add("contract_name", contractName);
+        upgrade.add("contract_name", templateDetails.name());
+        upgrade.add("fields",templateDetails.getFieldNames());
         return upgrade.render();
     }
 

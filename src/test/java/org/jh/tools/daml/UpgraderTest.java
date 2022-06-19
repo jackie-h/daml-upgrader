@@ -20,7 +20,7 @@ public class UpgraderTest
     }
 
     @Test
-    public void testScenario1()
+    public void testScenario1() throws IOException
     {
         Map<String, List<Module>> modulesResult = Upgrader.createUpgrades("daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar",
                 "daml-examples/scenario1/v2/.daml/dist/carbon-2.0.0.dar",
@@ -37,6 +37,8 @@ public class UpgraderTest
         List<Module> intro = modulesResult.get("Intro.Iou");
         Assert.assertEquals(1, intro.size());
         Assert.assertEquals("UpgradeIou", intro.get(0).getName());
+
+        DamlCommand.cleanBuildDar("target/scenario1");
     }
 
     @Test

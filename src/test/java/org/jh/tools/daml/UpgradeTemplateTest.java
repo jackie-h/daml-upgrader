@@ -11,8 +11,8 @@ public class UpgradeTemplateTest
     @Test
     public void testUpgradeTemplate()
     {
-        List<Module> result = UpgradeTemplate.createUpgradeTemplatesContent("Carbon", Lists.newArrayList("CarbonAgreement"));
-
+        List<Module> result = UpgradeTemplate.createUpgradeTemplatesContent("Carbon",
+                Lists.newArrayList(new TemplateDetails("CarbonAgreement")));
 
 
     }
