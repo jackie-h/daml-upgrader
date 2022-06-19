@@ -28,7 +28,7 @@ public class Upgrader
 
         Map<String, List<String>> upgradeTemplateNamesByModule = identifyTemplatesToUpgrade(archiveOld, archiveNew);
         Map<String, List<Module>> upgrades = createUpgradeTemplates(upgradeTemplateNamesByModule);
-        writeUpgradesToFiles(upgrades, outputPath);
+        writeUpgradesToFiles(upgrades, outputPath, currentArchivePath, newArchivePath);
         return upgrades;
     }
 
@@ -64,8 +64,24 @@ public class Upgrader
         return upgradesByModule;
     }
 
-    private static void writeUpgradesToFiles(Map<String, List<Module>> upgrades, String outpath)
+    private static void writeUpgradesToFiles(Map<String, List<Module>> upgrades, String outpath,
+                                             String currentArchivePath, String newArchivePath)
     {
+        String archiveNameFrom = getFileNameWithoutExtension(currentArchivePath);
+        String archiveNameTo = getFileNameWithoutExtension(newArchivePath);
+        String projectYaml = UpgradeTemplate.createProjectYaml("2.1.1", archiveNameFrom, archiveNameTo, currentArchivePath, newArchivePath);
+
+        try
+        {
+            Path yamlPath = Paths.get(outpath, "daml");
+            Files.createDirectories(yamlPath);
+            Files.writeString(yamlPath.resolve("daml.yaml"), projectYaml);
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException("Failed to create output:", e);
+        }
+
         for(String moduleName : upgrades.keySet())
         {
             List<Module> contracts = upgrades.get(moduleName);
@@ -73,16 +89,21 @@ public class Upgrader
         }
     }
 
+    private static String getFileNameWithoutExtension(String archivePath)
+    {
+        String archiveFileName = Paths.get(archivePath).getFileName().toString();
+        return archiveFileName.substring(0, archiveFileName.lastIndexOf("."));
+    }
+
     private static void writeUpgradeToFiles(String moduleName, List<Module> modules, String outpath)
     {
-        String directory = outpath + "/daml/" + moduleName + "/";
         try
         {
-            Files.createDirectories(Paths.get(directory));
+            Path directory = Paths.get(outpath, "daml", moduleName);
+            Files.createDirectories(Paths.get(outpath, "daml", moduleName));
             for (Module upgradeModule : modules)
             {
-                String fileName = directory + upgradeModule.getName() + ".daml";
-                Path filePath = Paths.get(fileName);
+                Path filePath = directory.resolve(upgradeModule.getName() + ".daml");
                 Files.writeString(filePath, upgradeModule.getContents());
             }
         }

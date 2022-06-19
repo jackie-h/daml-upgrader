@@ -47,6 +47,22 @@ public class UpgradeTemplate
             "           carbon_metric_tons = cert.carbon_metric_tons\n" +
             "           carbon_offset_method = \"unknown\"";
 
+    private static final String UPGRADE_PROJECT_YAML = "sdk-version: <sdk_version>\n" +
+            "name: upgrade\n" +
+            "source: daml\n" +
+            "version: 1.0.0\n" +
+            "dependencies:\n" +
+            "  - daml-prim\n" +
+            "  - daml-stdlib\n" +
+            "  - daml-script\n" +
+            "  - daml-trigger\n" +
+            "  - <archive_dep_v1>\n" +
+            "  - <archive_dep_v2>\n" +
+            "\n" +
+            "module-prefixes:\n" +
+            "  <archive_name_v1>: V1\n" +
+            "  <archive_name_v2>: V2\n";
+
     public static List<Module> createUpgradeTemplatesContent(String moduleName, List<String> contractNames)
     {
         List<Module> contracts = new ArrayList<>();
@@ -65,6 +81,23 @@ public class UpgradeTemplate
         ST upgrade = new ST(UPGRADE_TEMPLATE);
         upgrade.add("module_name", moduleName);
         upgrade.add("contract_name", contractName);
+        return upgrade.render();
+    }
+
+    public static String createProjectYaml(String sdkVersion, String archiveNameFrom, String archiveNameTo)
+    {
+        return createProjectYaml(sdkVersion, archiveNameFrom, archiveNameTo, archiveNameFrom, archiveNameTo);
+    }
+
+    public static String createProjectYaml(String sdkVersion, String archiveNameFrom, String archiveNameTo,
+                                            String archiveDepFrom, String archiveDepTo)
+    {
+        ST upgrade = new ST(UPGRADE_PROJECT_YAML);
+        upgrade.add("sdk_version", sdkVersion);
+        upgrade.add("archive_name_v1", archiveNameFrom);
+        upgrade.add("archive_name_v2", archiveNameTo);
+        upgrade.add("archive_dep_v1", archiveDepFrom);
+        upgrade.add("archive_dep_v2", archiveDepTo);
         return upgrade.render();
     }
 }
