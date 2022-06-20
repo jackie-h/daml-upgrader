@@ -77,7 +77,7 @@ public class UpgraderEndToEndTest
             CompletableFuture<String> completableFuture = CompletableFuture.supplyAsync(() -> {
                 try
                 {
-                    return DamlCommand.exec("daml trigger --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --trigger-name UpgradeTrigger:upgradeTrigger --ledger-host localhost --ledger-port 6865 --ledger-user=alice");
+                    return DamlCommand.exec("daml trigger --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --trigger-name UpgradeCarbonTrigger:upgradeTrigger --ledger-host localhost --ledger-port 6865 --ledger-user=alice");
                 }
                 catch (IOException e)
                 {

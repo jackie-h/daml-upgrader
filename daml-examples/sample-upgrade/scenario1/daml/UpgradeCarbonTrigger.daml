@@ -1,4 +1,4 @@
-module UpgradeTrigger where
+module UpgradeCarbonTrigger where
 
 import DA.Foldable (forA_)
 import Daml.Trigger
