@@ -88,10 +88,10 @@ public class UpgraderEndToEndTest
 
 
             //Alice initiaties an upgrade by creating proposals
-            DamlCommand.exec("daml script --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --script-name InitiateUpgrade:initiateUpgrade --ledger-host localhost --ledger-port 6865 --input-file=target/alice.json");
+            DamlCommand.exec("daml script --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --script-name UpgradeCarbonInitiate:initiateUpgrade --ledger-host localhost --ledger-port 6865 --input-file=target/alice.json");
 
             //Query for contracts
-            DamlCommand.exec("daml script --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --script-name InitiateUpgrade:queryUpgrade --ledger-host localhost --ledger-port 6865 --input-file=target/alice.json --output-file=target/contracts.json");
+            DamlCommand.exec("daml script --dar daml-examples/sample-upgrade/scenario1/.daml/dist/upgrade-1.0.0.dar --script-name UpgradeCarbonInitiate:queryUpgrade --ledger-host localhost --ledger-port 6865 --input-file=target/alice.json --output-file=target/contracts.json");
             String outUpgrades = readContractsFile();
 
             //Bob accepts the proposal

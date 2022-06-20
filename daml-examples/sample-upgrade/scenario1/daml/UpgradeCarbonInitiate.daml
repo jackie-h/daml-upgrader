@@ -1,4 +1,4 @@
-module InitiateUpgrade where
+module UpgradeCarbonInitiate where
 
 import Daml.Script
 import DA.Foldable (forA_)

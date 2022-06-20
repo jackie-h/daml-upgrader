@@ -44,6 +44,25 @@ public class UpgradeTemplate
             "         create <module_name>V2.<contract_name> with\n" +
             "<fields:{ field |           <field> = cert.<field>\n }>";
 
+    private static final String UPGRADE_INITIATE_SCRIPT = "module <module_name>.Upgrade<contract_name>Initiate where\n" +
+            "\n" +
+            "import Daml.Script\n" +
+            "import DA.Foldable (forA_)\n" +
+            "import DA.List (dedup)\n" +
+            "import <module_name>.Upgrade<contract_name>\n" +
+            "import qualified V1.<module_name> as <module_name>V1\n" +
+            "\n" +
+            "\n" +
+            "initiateUpgrade : Party -> Script [Party]\n" +
+            "initiateUpgrade theOwner = do\n" +
+            "  certs \\<- query @<module_name>V1.<contract_name> theOwner\n" +
+            "  let myCerts = filter (\\(_cid, c) -> c.issuer == theOwner) certs\n" +
+            "  let owners = dedup $ map (\\(_cid, c) -> c.owner) myCerts\n" +
+            "  forA_ owners $ \\owner -> do\n" +
+            "    debugRaw (\"Creating upgrade proposal for: \" \\<> show owner)\n" +
+            "    submit theOwner $ createCmd (Upgrade<contract_name>Proposal theOwner owner)\n" +
+            "  pure( owners )";
+
     private static final String UPGRADE_PROJECT_YAML = "sdk-version: <sdk_version>\n" +
             "name: upgrade\n" +
             "source: daml\n" +
@@ -69,6 +88,8 @@ public class UpgradeTemplate
             String upgradeTemplate = createUpgradeTemplate(moduleName, templateDetails);
             String upgradeModuleName = "Upgrade" + templateDetails.name();
             contracts.add(new Module(upgradeModuleName, upgradeTemplate));
+            String upgradeInitiateScript = createInitiateUpgradeScript(moduleName, templateDetails);
+            contracts.add(new Module("Upgrade" + templateDetails.name() + "Initiate", upgradeInitiateScript));
         }
         return contracts;
     }
@@ -79,6 +100,14 @@ public class UpgradeTemplate
         upgrade.add("module_name", moduleName);
         upgrade.add("contract_name", templateDetails.name());
         upgrade.add("fields",templateDetails.getFieldNames());
+        return upgrade.render();
+    }
+
+    private static String createInitiateUpgradeScript(String moduleName, TemplateDetails templateDetails)
+    {
+        ST upgrade = new ST(UPGRADE_INITIATE_SCRIPT);
+        upgrade.add("module_name", moduleName);
+        upgrade.add("contract_name", templateDetails.name());
         return upgrade.render();
     }
 
