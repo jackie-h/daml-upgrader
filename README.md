@@ -1,10 +1,10 @@
-#DAML Smart Contract Upgrades
+# DAML Smart Contract Upgrades
 
 Smart contracts are legally binding (or can be) so changes need to be approved by all parties
 Smart contracts package data with logic, data schemas need migration
 
 
-##Upgrade Situations
+## Upgrade Situations
 
 - Contract logic changes
   - new methods
@@ -46,9 +46,9 @@ Difference between changes that would change the database schema stored, vs ones
 - Initial go-live - perhaps ok to do upgrades without triggers?
 - Are we they only "issuer" for contracts for first go-live?
 
-##Identity
+## Identity
 
-###How does a live contract instance identify which code was used to create it?
+### How does a live contract instance identify which code was used to create it?
 
 DAML files are compiled into DALF archives. The DALF archive hash is the identifier for the package.
 
@@ -85,7 +85,7 @@ See [Git Commit - Structure stable packages](https://github.com/digital-asset/da
 >        "daml-prim",
 >      )
 
-##Versioning
+## Versioning
 
 DAML follows semantic versioning
 
@@ -101,12 +101,12 @@ DAML follows semantic versioning
 
 [DAML Docs:Versioning](https://docs.daml.com/support/releases.html#versioning)
 
-##Controls
+## Controls
 Once released and in use we need to be careful to
 - Keep an immutable record of that contract
 - Must be careful about what we deploy, removing DAR file or redeploying can break prod
 
-##Scenarios
+## Scenarios
 
 - New development, contract is not in production yet, all changes allowed, no need to do a new version
   - Potentially still want to use versions upgrades if downstream dev dependencies (API/UI/BLIP) ?
@@ -115,16 +115,16 @@ Once released and in use we need to be careful to
   - Must not be allowed to change it without creating a new version and upgrade
     - Are there any situations where it can be changed and won't change hash?
 
-##Requirements
+## Requirements
 - Ability to stop creation of contracts for obsolete templates we are trying to decommission
 - Emergency upgrades - need a "breakglass" force upgrade for bad bugs ? Or ability to freeze actions on contracts until upgraded?
 - Timelines - do we force upgrades to be accepted within a certain timeline ? Need to control how many versions are out
 - Developer should review upgrade contracts, tooling can generate them but should be reviewed.
 - Rollbacks, ability to downgrade contracts
 
-##Solutions
+## Solutions
 
-###Code base structure
+### Code base structure
 
 DAML recommendations: 
 
@@ -145,7 +145,7 @@ Dealing with naming collisions:
 
 [DAML Docs:Naming Collisions](https://docs.daml.com/daml/reference/packages.html#handling-module-name-collisions)
 
-###A) Keep all live versions in trunk
+### A) Keep all live versions in trunk
 
 - /MyContractV1
   - /MyContractV1
@@ -156,7 +156,7 @@ Challenges:
  - Should not redeploy DAR that is already in use. i.e. if MyContractV1 has not changed, no need to redeploy
    - Can overcome by doing a check on the hash of prod
 
-###B) Separate tiny projects for each contract
+### B) Separate tiny projects for each contract
 Benefits
 - Small self-contained projects
 - Can have faster build times (depends on build tech, parallelism can help)
@@ -165,7 +165,7 @@ Downsides
 - When you have dependencies, have to release dependent projects first, difficult to test whole thing
 - Upgrades of SDK/stand libs have to be done in each project
 
-###C) Mono-repo style micro-services
+### C) Mono-repo style micro-services
 - Do a diff and only redeploy if changed
 https://serverless-stack.com/chapters/deploying-only-updated-services.html
 
@@ -173,12 +173,12 @@ Benefits
 - All code is there, can refactor across in one go
 - Changes across multiple packages can easily be made together
 
-##What constitutes a new version of API
+## What constitutes a new version of API
 - Adding a new field - non-breaking ?
 
-##What needs to happen to upgrade
+## What needs to happen to upgrade
 
-###Normal release
+### Normal release
 1. Starting state: my-contract-1.0.dar is in prod in use.
 2. Create and release new version: my-contract-2.0.dar
 3. API & UI need to continue to support both ?
@@ -189,9 +189,9 @@ Benefits
 8. Update API/UI so it no longer queries for my-contract-1.0.dar items
 9. Remove my-contract-1.0.dar from Canton nodes
 
-###Emergency
+### Emergency
 
-##Automated Upgrade Tooling
+## Automated Upgrade Tooling
 
 This is what it would do
 
