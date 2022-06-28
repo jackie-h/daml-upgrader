@@ -107,7 +107,7 @@ public class DamlLfProtoUtils
         return moduleTemplates;
     }
 
-    private static String getName(DamlLf1.Package _package, int internedDname)
+    public static String getName(DamlLf1.Package _package, int internedDname)
     {
         DamlLf1.InternedDottedName iName = _package.getInternedDottedNames(internedDname);
         List<Integer> segments = iName.getSegmentsInternedStrList();
