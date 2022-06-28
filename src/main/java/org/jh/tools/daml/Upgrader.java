@@ -23,12 +23,12 @@ public class Upgrader
         LOGGER.info("Archive Path From=" + archivePathFrom);
         LOGGER.info("Archive Path To=" + archivePathTo);
 
-        DamlLf.Archive archiveFrom = Dar.readDar(archivePathFrom).getDamlLf();
-        DamlLf.Archive archiveTo = Dar.readDar(archivePathTo).getDamlLf();
+        Dar darFrom = Dar.readDar(archivePathFrom);
+        Dar darTo = Dar.readDar(archivePathTo);
 
-        Map<String, List<TemplateDetails>> upgradeTemplateNamesByModule = identifyTemplatesToUpgrade(archiveFrom, archiveTo);
+        Map<String, List<TemplateDetails>> upgradeTemplateNamesByModule = identifyTemplatesToUpgrade(darFrom.getDamlLf(), darTo.getDamlLf());
         Map<String, List<Module>> upgrades = createUpgradeTemplates(upgradeTemplateNamesByModule);
-        writeUpgradesToFiles(upgrades, outputPath, archivePathFrom, archivePathTo);
+        writeUpgradesToFiles(upgrades, outputPath, darTo.getSdkVersion(), archivePathFrom, archivePathTo);
         return upgrades;
     }
 
@@ -65,14 +65,14 @@ public class Upgrader
     }
 
     private static void writeUpgradesToFiles(Map<String, List<Module>> upgrades, String outpath,
-                                             String archivePathFrom, String archivePathTo)
+                                             String sdkVersion, String archivePathFrom, String archivePathTo)
     {
         String archiveNameFrom = getFileNameWithoutExtension(archivePathFrom);
         String archiveNameTo = getFileNameWithoutExtension(archivePathTo);
         //todo - make it an option to use direct paths
         Path relativeArchivePathFrom = Paths.get(outpath).relativize(Paths.get(archivePathFrom));
         Path relativeArchivePathTo = Paths.get(outpath).relativize(Paths.get(archivePathTo));
-        String projectYaml = UpgradeTemplate.createProjectYaml("2.1.1", archiveNameFrom, archiveNameTo,
+        String projectYaml = UpgradeTemplate.createProjectYaml(sdkVersion, archiveNameFrom, archiveNameTo,
                 relativeArchivePathFrom.toString(), relativeArchivePathTo.toString());
 
         try

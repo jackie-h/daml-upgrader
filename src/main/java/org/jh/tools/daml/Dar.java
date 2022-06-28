@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.jar.Manifest;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -18,10 +19,12 @@ public class Dar
     private final String name;
     private final Map<String,String> sources;
     private final Map<String,DamlLf.Archive> damlLfArchivesByHash;
+    private final Manifest manifest;
 
-    public Dar(String name, Map<String, String> sources, Map<String,DamlLf.Archive> damlLfArchivesByHash)
+    public Dar(String name, Manifest manifest, Map<String, String> sources, Map<String,DamlLf.Archive> damlLfArchivesByHash)
     {
         this.name = name;
+        this.manifest = manifest;
         this.sources = sources;
         this.damlLfArchivesByHash = damlLfArchivesByHash;
     }
@@ -34,6 +37,7 @@ public class Dar
         DamlLf.Archive archiveProto = null;
         Map<String,String> sources = new HashMap<>();
         Map<String,DamlLf.Archive> archives = new HashMap<>();
+        Manifest manifest = null;
 
         try(ZipInputStream is = new ZipInputStream(java.nio.file.Files.newInputStream(path)))
         {
@@ -60,9 +64,13 @@ public class Dar
                     String file = new String(is.readAllBytes());
                     sources.put(name, file);
                 }
+                else if ("MANIFEST.MF".equals(itemName))
+                {
+                    manifest = new Manifest(is);
+                }
             }
 
-            return new Dar(darName, sources, archives);
+            return new Dar(darName, manifest, sources, archives);
         }
         catch (IOException e)
         {
@@ -76,6 +84,11 @@ public class Dar
     public String getName()
     {
         return name;
+    }
+
+    public String getSdkVersion()
+    {
+        return manifest.getMainAttributes().getValue("Sdk-Version");
     }
 
     public Map<String, String> getSources()
