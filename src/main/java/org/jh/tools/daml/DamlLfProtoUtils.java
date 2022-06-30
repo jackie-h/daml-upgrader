@@ -45,6 +45,51 @@ public class DamlLfProtoUtils
 
         return moduleTemplates;
     }
+    
+    public static Map<String,Map<String,List<String>>> findSignatories(DamlLf.ArchivePayload payload)
+    {
+        Map<String,Map<String,List<String>>> templateSignatories = new HashMap<>();
+
+        DamlLf1.Package _package = payload.getDamlLf1();
+        for(DamlLf1.Module module : _package.getModulesList())
+        {
+            for(DamlLf1.DefValue value: module.getValuesList())
+            {
+                if(value.hasNameWithType())
+                {
+                    String name = getName(_package, value.getNameWithType().getNameInternedDname());
+                    if(name.startsWith("$$csignatory"))
+                    {
+                        if(value.hasExpr())
+                        {
+                            DamlLf1.Expr expr = value.getExpr();
+                            if(expr.hasAbs())
+                            {
+                                DamlLf1.Expr.Abs abs = expr.getAbs();
+                                DamlLf1.Expr body = abs.getBody();
+
+                                DamlLf1.Block block = body.getLet();
+                                for(DamlLf1.Binding binding: block.getBindingsList())
+                                {
+                                    DamlLf1.Expr bound = binding.getBound();
+                                    DamlLf1.Expr.RecProj recProj = bound.getRecProj();
+                                    String signatoryName = _package.getInternedStrings(recProj.getFieldInternedStr());
+                                    DamlLf1.TypeConName typeConName = recProj.getTycon().getTycon();
+                                    String certName = getName(_package, typeConName.getNameInternedDname());
+                                    String moduleName = getName(_package, typeConName.getModule().getModuleNameInternedDname());
+
+                                    Map<String, List<String>> templateSigs = templateSignatories.computeIfAbsent(moduleName, k -> new HashMap<>());
+                                    List<String> signatories = templateSigs.computeIfAbsent(certName, k -> new ArrayList<>());
+                                    signatories.add(signatoryName);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return templateSignatories;
+    }
 
     public static Map<String,List<String>> findTemplatesThatAreInOneButDifferentInTwo(DamlLf.ArchivePayload one, DamlLf.ArchivePayload two)
     {
