@@ -4,9 +4,12 @@ import org.stringtemplate.v4.ST;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class UpgradeTemplate
 {
+    private static final Logger LOGGER =  Logger.getLogger(UpgradeTemplate.class.getName());
+
     private static final String UPGRADE_TEMPLATE = "module <module_name>.Upgrade<contract_name> where\n" +
             "\n" +
             "import qualified V1.<module_name> as <module_name>V1\n" +
@@ -92,6 +95,10 @@ public class UpgradeTemplate
                 contracts.add(new Module(upgradeModuleName, upgradeTemplate));
                 String upgradeInitiateScript = createInitiateUpgradeScript(moduleName, templateDetails);
                 contracts.add(new Module("Upgrade" + templateDetails.name() + "Initiate", upgradeInitiateScript));
+            }
+            else
+            {
+                LOGGER.warning("Don't know how to upgrade template:" + templateDetails.name() + " with signatories=" + templateDetails.getSignatories().size());
             }
         }
         return contracts;
