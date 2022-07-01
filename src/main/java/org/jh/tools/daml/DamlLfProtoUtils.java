@@ -18,6 +18,8 @@ public class DamlLfProtoUtils
         Map<String, Map<String, TemplateWithData>> moduleTemplatesOne = collectTemplates(one.getDamlLf1());
         Map<String, Map<String, TemplateWithData>> moduleTemplatesTwo = collectTemplates(two.getDamlLf1());
 
+        Map<String,Map<String,List<String>>> signatoriesMap = findSignatories(one);
+
         for(String moduleName: moduleTemplatesOne.keySet())
         {
             Map<String, TemplateWithData> templatesOne = moduleTemplatesOne.get(moduleName);
@@ -32,8 +34,9 @@ public class DamlLfProtoUtils
                     if (template2 != null)
                     {
                         TemplateWithData templateWithData = templatesOne.get(templateName);
-                        templates.add(TemplateDetails.from(templateName, templateWithData.dataType,
-                                templateWithData.template, one.getDamlLf1()));
+                        List<String> signatories = signatoriesMap.getOrDefault(moduleName, new HashMap<>())
+                                .getOrDefault(templateName, new ArrayList<>());
+                        templates.add(TemplateDetails.from(templateName, signatories, templateWithData.dataType, one.getDamlLf1()));
                     }
                 }
             }

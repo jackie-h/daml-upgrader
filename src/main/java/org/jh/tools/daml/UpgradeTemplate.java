@@ -14,32 +14,32 @@ public class UpgradeTemplate
             "\n" +
             "template Upgrade<contract_name>Proposal\n" +
             "  with\n" +
-            "    issuer : Party\n" +
-            "    owner : Party\n" +
+            "    <sig_issuer> : Party\n" +
+            "    <sig_owner> : Party\n" +
             "  where\n" +
-            "    signatory issuer\n" +
-            "    observer owner\n" +
-            "    key (issuer, owner) : (Party, Party)\n" +
+            "    signatory <sig_issuer>\n" +
+            "    observer <sig_owner>\n" +
+            "    key (<sig_issuer>, <sig_owner>) : (Party, Party)\n" +
             "    maintainer key._1\n" +
             "    choice Accept : ContractId Upgrade<contract_name>Agreement\n" +
-            "      controller owner\n" +
+            "      controller <sig_owner>\n" +
             "      do create Upgrade<contract_name>Agreement with ..\n" +
             "\n" +
             "template Upgrade<contract_name>Agreement\n" +
             "  with\n" +
-            "    issuer : Party\n" +
-            "    owner : Party\n" +
+            "    <sig_issuer> : Party\n" +
+            "    <sig_owner> : Party\n" +
             "  where\n" +
-            "    signatory issuer, owner\n" +
-            "    key (issuer, owner) : (Party, Party)\n" +
+            "    signatory <sig_issuer>, <sig_owner>\n" +
+            "    key (<sig_issuer>, <sig_owner>) : (Party, Party)\n" +
             "    maintainer key._1\n" +
             "    nonconsuming choice Upgrade : ContractId <module_name>V2.<contract_name>\n" +
             "      with\n" +
             "        certId : ContractId <module_name>V1.<contract_name>\n" +
-            "      controller issuer\n" +
+            "      controller <sig_issuer>\n" +
             "      do cert \\<- fetch certId\n" +
-            "         assert (cert.issuer == issuer)\n" +
-            "         assert (cert.owner == owner)\n" +
+            "         assert (cert.<sig_issuer> == <sig_issuer>)\n" +
+            "         assert (cert.<sig_owner> == <sig_owner>)\n" +
             "         archive certId\n" +
             "         create <module_name>V2.<contract_name> with\n" +
             "<fields:{ field |           <field> = cert.<field>\n }>";
@@ -56,8 +56,8 @@ public class UpgradeTemplate
             "initiateUpgrade : Party -> Script [Party]\n" +
             "initiateUpgrade theOwner = do\n" +
             "  certs \\<- query @<module_name>V1.<contract_name> theOwner\n" +
-            "  let myCerts = filter (\\(_cid, c) -> c.issuer == theOwner) certs\n" +
-            "  let owners = dedup $ map (\\(_cid, c) -> c.owner) myCerts\n" +
+            "  let myCerts = filter (\\(_cid, c) -> c.<sig_issuer> == theOwner) certs\n" +
+            "  let owners = dedup $ map (\\(_cid, c) -> c.<sig_owner>) myCerts\n" +
             "  forA_ owners $ \\owner -> do\n" +
             "    debugRaw (\"Creating upgrade proposal for: \" \\<> show owner)\n" +
             "    submit theOwner $ createCmd (Upgrade<contract_name>Proposal theOwner owner)\n" +
@@ -85,11 +85,14 @@ public class UpgradeTemplate
 
         for(TemplateDetails templateDetails: contractNames)
         {
-            String upgradeTemplate = createUpgradeTemplate(moduleName, templateDetails);
-            String upgradeModuleName = "Upgrade" + templateDetails.name();
-            contracts.add(new Module(upgradeModuleName, upgradeTemplate));
-            String upgradeInitiateScript = createInitiateUpgradeScript(moduleName, templateDetails);
-            contracts.add(new Module("Upgrade" + templateDetails.name() + "Initiate", upgradeInitiateScript));
+            if(templateDetails.getSignatories().size() == 2)
+            {
+                String upgradeTemplate = createUpgradeTemplate(moduleName, templateDetails);
+                String upgradeModuleName = "Upgrade" + templateDetails.name();
+                contracts.add(new Module(upgradeModuleName, upgradeTemplate));
+                String upgradeInitiateScript = createInitiateUpgradeScript(moduleName, templateDetails);
+                contracts.add(new Module("Upgrade" + templateDetails.name() + "Initiate", upgradeInitiateScript));
+            }
         }
         return contracts;
     }
@@ -100,6 +103,11 @@ public class UpgradeTemplate
         upgrade.add("module_name", moduleName);
         upgrade.add("contract_name", templateDetails.name());
         upgrade.add("fields",templateDetails.getFieldNames());
+        //todo - try to identify the actual owner
+        String issuer = templateDetails.getSignatories().get(0);
+        String owner = templateDetails.getSignatories().get(1);
+        upgrade.add("sig_issuer", issuer);
+        upgrade.add("sig_owner", owner);
         return upgrade.render();
     }
 
@@ -108,6 +116,11 @@ public class UpgradeTemplate
         ST upgrade = new ST(UPGRADE_INITIATE_SCRIPT);
         upgrade.add("module_name", moduleName);
         upgrade.add("contract_name", templateDetails.name());
+        //todo - try to identify the actual owner
+        String issuer = templateDetails.getSignatories().get(0);
+        String owner = templateDetails.getSignatories().get(1);
+        upgrade.add("sig_issuer", issuer);
+        upgrade.add("sig_owner", owner);
         return upgrade.render();
     }
 

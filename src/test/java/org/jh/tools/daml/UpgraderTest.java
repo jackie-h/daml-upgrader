@@ -26,20 +26,25 @@ public class UpgraderTest
                 "daml-examples/scenario1/v2/.daml/dist/carbon-2.0.0.dar",
                 "target/scenario1");
 
-        Assert.assertEquals(2, modulesResult.keySet().size());
+        Assert.assertEquals(3, modulesResult.keySet().size());
 
         List<Module> result = modulesResult.get("Carbon");
 
-        Assert.assertEquals(4, result.size());
-        Assert.assertEquals("UpgradeCarbonCertProposal", result.get(0).getName());
-        Assert.assertEquals("UpgradeCarbonCertProposalInitiate", result.get(1).getName());
-        Assert.assertEquals("UpgradeCarbonCert", result.get(2).getName());
-        Assert.assertEquals("UpgradeCarbonCertInitiate", result.get(3).getName());
+        Assert.assertEquals(2, result.size());
+        //Assert.assertEquals("UpgradeCarbonCertProposal", result.get(0).getName());
+        //Assert.assertEquals("UpgradeCarbonCertProposalInitiate", result.get(1).getName());
+        Assert.assertEquals("UpgradeCarbonCert", result.get(0).getName());
+        Assert.assertEquals("UpgradeCarbonCertInitiate", result.get(1).getName());
 
         List<Module> intro = modulesResult.get("Intro.Iou");
         Assert.assertEquals(2, intro.size());
         Assert.assertEquals("UpgradeIou", intro.get(0).getName());
         Assert.assertEquals("UpgradeIouInitiate", intro.get(1).getName());
+
+        List<Module> invite = modulesResult.get("Intro.Invite");
+        Assert.assertEquals(2, invite.size());
+        Assert.assertEquals("UpgradeInvitation", invite.get(0).getName());
+        Assert.assertEquals("UpgradeInvitationInitiate", invite.get(1).getName());
 
         DamlCommand.cleanBuildDar("target/scenario1");
     }

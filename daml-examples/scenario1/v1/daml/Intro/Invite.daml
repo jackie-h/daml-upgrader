@@ -1,0 +1,10 @@
+module Intro.Invite where
+
+template Invitation
+  with
+    holder : Party
+    guest : Party
+    date : Time
+  where
+
+    signatory holder, guest

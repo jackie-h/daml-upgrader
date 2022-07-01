@@ -11,6 +11,8 @@ public class TemplateDetails
 
     private final List<String> fieldNames = new ArrayList<>();
 
+    private List<String> signatories = new ArrayList<>();
+
     public TemplateDetails(String name)
     {
         this.name = name;
@@ -19,6 +21,12 @@ public class TemplateDetails
     public TemplateDetails withFieldName(String name)
     {
         this.fieldNames.add(name);
+        return this;
+    }
+
+    public TemplateDetails withSignatories(List<String> signatories)
+    {
+        this.signatories = signatories;
         return this;
     }
 
@@ -32,13 +40,19 @@ public class TemplateDetails
         return fieldNames;
     }
 
-    public static TemplateDetails from(String name, DamlLf1.DefDataType dataType, DamlLf1.DefTemplate damlLfTemplate, DamlLf1.Package _package)
+    public List<String> getSignatories()
+    {
+        return signatories;
+    }
+
+    public static TemplateDetails from(String name, List<String> signatories, DamlLf1.DefDataType dataType, DamlLf1.Package _package)
     {
         TemplateDetails templateDetails = new TemplateDetails(name);
         for(DamlLf1.FieldWithType ft: dataType.getRecord().getFieldsList())
         {
             String fieldName = _package.getInternedStrings(ft.getFieldInternedStr());
             templateDetails.withFieldName(fieldName);
+            templateDetails.withSignatories(signatories);
         }
         return templateDetails;
     }
