@@ -909,7 +909,7 @@ public class DamlLfPrinter
         }
     }
 
-    private static void print(StringBuilder builder, String tab, DamlLf1.Type type, DamlLf1.Package _package)
+    protected static void print(StringBuilder builder, String tab, DamlLf1.Type type, DamlLf1.Package _package)
     {
         if(type.hasInterned())
         {

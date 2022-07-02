@@ -39,7 +39,7 @@ public class DamlLfProtoUtils
 
                         TemplateDetails details = TemplateDetails.from(templateName, signatories, templateWithData.dataType, one.getDamlLf1());
 
-                        if(isSchemaSame(templateWithData.dataType, template2.dataType))
+                        if(isSchemaSame(templateWithData.dataType, one.getDamlLf1(), template2.dataType, two.getDamlLf1()))
                         {
                             diffs.addTemplateWithoutSchemaChange(details);
                         }
@@ -56,14 +56,47 @@ public class DamlLfProtoUtils
         return moduleTemplates;
     }
 
-    public static boolean isSchemaSame(DamlLf1.DefDataType dataTypeOne, DamlLf1.DefDataType dataTypeTwo)
+    public static boolean isSchemaSame(DamlLf1.DefDataType dataTypeOne, DamlLf1.Package _packageOne,
+                                       DamlLf1.DefDataType dataTypeTwo, DamlLf1.Package _packageTwo)
     {
         if(dataTypeOne.getRecord().getFieldsList().size() != dataTypeTwo.getRecord().getFieldsList().size())
         {
             return false;
         }
+        else
+        {
+            Map<String,String> fieldsOne = getFieldNamesAndTypes(dataTypeOne, _packageOne);
+            Map<String,String> fieldsTwo = getFieldNamesAndTypes(dataTypeTwo, _packageTwo);
+
+            for(String fieldName : fieldsOne.keySet())
+            {
+                String type1 = fieldsOne.get(fieldName);
+                String type2 = fieldsTwo.get(fieldName);
+                if(type2 == null)
+                {
+                    return false;
+                }
+                if(!type1.equals(type2))
+                {
+                    return false;
+                }
+            }
+        }
 
         return true;
+    }
+
+    public static Map<String,String> getFieldNamesAndTypes(DamlLf1.DefDataType dataType, DamlLf1.Package _package)
+    {
+        Map<String,String> fieldMap = new HashMap<>();
+        for(DamlLf1.FieldWithType ft: dataType.getRecord().getFieldsList())
+        {
+            String fieldName = _package.getInternedStrings(ft.getFieldInternedStr());
+            StringBuilder builder = new StringBuilder();
+            DamlLfPrinter.print(builder, "", ft.getType(), _package);
+            fieldMap.put(fieldName,builder.toString());
+        }
+        return fieldMap;
     }
     
     public static Map<String,Map<String,List<String>>> findSignatories(DamlLf.ArchivePayload payload)
