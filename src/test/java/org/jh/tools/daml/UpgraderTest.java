@@ -26,7 +26,7 @@ public class UpgraderTest
                 "daml-examples/scenario1/v2/.daml/dist/carbon-2.0.0.dar",
                 "target/scenario1");
 
-        Assert.assertEquals(4, modulesResult.keySet().size());
+        Assert.assertEquals(5, modulesResult.keySet().size());
 
         List<Module> result = modulesResult.get("Carbon");
 
@@ -52,6 +52,9 @@ public class UpgraderTest
         Assert.assertEquals("UpgradeSameInitiate", schemaChanges.get(1).getName());
         Assert.assertEquals("UpgradeReorderField", schemaChanges.get(2).getName());
         Assert.assertEquals("UpgradeReorderFieldInitiate", schemaChanges.get(3).getName());
+
+        List<Module> multiParty = modulesResult.get("Intro.MultiParty");
+        Assert.assertEquals(0, multiParty.size());
 
         DamlCommand.cleanBuildDar("target/scenario1");
     }

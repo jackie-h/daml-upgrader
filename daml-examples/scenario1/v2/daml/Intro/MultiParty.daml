@@ -1,0 +1,43 @@
+module Intro.MultiParty where
+
+import DA.List
+
+template Agreement
+  with
+    signatories: [Party]
+  where
+    signatory signatories
+    ensure
+      unique signatories
+  -- The rest of the template to be agreed to would follow here
+
+
+template Pending
+  with
+    finalContract: Agreement
+    alreadySigned: [Party]
+  where
+    signatory alreadySigned
+    observer finalContract.signatories
+    ensure
+      -- Can't have duplicate signatories
+      unique alreadySigned
+
+    -- The parties who need to sign is the finalContract.signatories with alreadySigned filtered out
+    let toSign = filter (`notElem` alreadySigned) finalContract.signatories
+
+    choice Sign : ContractId Pending with
+        signer : Party
+      controller signer
+        do
+          -- Check the controller is in the toSign list, and if they are, sign the Pending contract
+          assert (signer `elem` toSign)
+          create this with alreadySigned = signer :: alreadySigned
+
+    choice Finalize : ContractId Agreement with
+        signer : Party
+      controller signer
+        do
+          -- Check that all the required signatories have signed Pending
+          assert (sort alreadySigned == sort finalContract.signatories)
+          create finalContract

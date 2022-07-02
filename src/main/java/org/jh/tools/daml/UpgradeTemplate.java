@@ -109,12 +109,12 @@ public class UpgradeTemplate
         for(TemplateDetails templateDetails: contractNames)
         {
             String upgradeModuleName = "Upgrade" + templateDetails.name();
-            if(templateDetails.getSignatories().size() == 1)
+            if(templateDetails.isUnilateral())
             {
                 String upgradeTemplate = createUnilateralUpgradeTemplate(moduleName, templateDetails);
                 contracts.add(new Module(upgradeModuleName, upgradeTemplate));
             }
-            else if(templateDetails.getSignatories().size() == 2)
+            else if(templateDetails.isBilateral())
             {
                 String upgradeTemplate = createBilateralUpgradeTemplate(moduleName, templateDetails);
                 contracts.add(new Module(upgradeModuleName, upgradeTemplate));
@@ -123,7 +123,7 @@ public class UpgradeTemplate
             }
             else
             {
-                LOGGER.warning("Don't know how to upgrade template:" + templateDetails.name() + " with signatories=" + templateDetails.getSignatories().size());
+                LOGGER.warning("Don't know how to upgrade template:" + templateDetails.name() + " has more than two signatories");
             }
         }
         return contracts;
