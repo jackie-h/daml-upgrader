@@ -10,7 +10,27 @@ public class UpgradeTemplate
 {
     private static final Logger LOGGER =  Logger.getLogger(UpgradeTemplate.class.getName());
 
-    private static final String UPGRADE_TEMPLATE = "module <module_name>.Upgrade<contract_name> where\n" +
+    private static final String UPGRADE_TEMPLATE_UNILATERAL = "module <module_name>.Upgrade<contract_name> where\n" +
+            "\n" +
+            "import qualified V1.<module_name> as <module_name>V1\n" +
+            "import qualified V2.<module_name> as <module_name>V2\n" +
+            "\n" +
+            "template Upgrade<contract_name>Agreement\n" +
+            "  with\n" +
+            "    <sig_issuer> : Party\n" +
+            "  where\n" +
+            "    signatory <sig_issuer>\n" +
+            "    nonconsuming choice Upgrade : ContractId <module_name>V2.<contract_name>\n" +
+            "      with\n" +
+            "        certId : ContractId <module_name>V1.<contract_name>\n" +
+            "      controller <sig_issuer>\n" +
+            "      do cert \\<- fetch certId\n" +
+            "         assert (cert.<sig_issuer> == <sig_issuer>)\n" +
+            "         archive certId\n" +
+            "         create <module_name>V2.<contract_name> with\n" +
+            "<fields:{ field |           <field> = cert.<field>\n }>";
+
+    private static final String UPGRADE_TEMPLATE_BILATERAL = "module <module_name>.Upgrade<contract_name> where\n" +
             "\n" +
             "import qualified V1.<module_name> as <module_name>V1\n" +
             "import qualified V2.<module_name> as <module_name>V2\n" +
@@ -88,10 +108,15 @@ public class UpgradeTemplate
 
         for(TemplateDetails templateDetails: contractNames)
         {
-            if(templateDetails.getSignatories().size() == 2)
+            String upgradeModuleName = "Upgrade" + templateDetails.name();
+            if(templateDetails.getSignatories().size() == 1)
             {
-                String upgradeTemplate = createUpgradeTemplate(moduleName, templateDetails);
-                String upgradeModuleName = "Upgrade" + templateDetails.name();
+                String upgradeTemplate = createUnilateralUpgradeTemplate(moduleName, templateDetails);
+                contracts.add(new Module(upgradeModuleName, upgradeTemplate));
+            }
+            else if(templateDetails.getSignatories().size() == 2)
+            {
+                String upgradeTemplate = createBilateralUpgradeTemplate(moduleName, templateDetails);
                 contracts.add(new Module(upgradeModuleName, upgradeTemplate));
                 String upgradeInitiateScript = createInitiateUpgradeScript(moduleName, templateDetails);
                 contracts.add(new Module("Upgrade" + templateDetails.name() + "Initiate", upgradeInitiateScript));
@@ -104,9 +129,20 @@ public class UpgradeTemplate
         return contracts;
     }
 
-    private static String createUpgradeTemplate(String moduleName, TemplateDetails templateDetails)
+    private static String createUnilateralUpgradeTemplate(String moduleName, TemplateDetails templateDetails)
     {
-        ST upgrade = new ST(UPGRADE_TEMPLATE);
+        ST upgrade = new ST(UPGRADE_TEMPLATE_UNILATERAL);
+        upgrade.add("module_name", moduleName);
+        upgrade.add("contract_name", templateDetails.name());
+        upgrade.add("fields",templateDetails.getFieldNames());
+        String issuer = templateDetails.getSignatories().get(0);
+        upgrade.add("sig_issuer", issuer);
+        return upgrade.render();
+    }
+
+    private static String createBilateralUpgradeTemplate(String moduleName, TemplateDetails templateDetails)
+    {
+        ST upgrade = new ST(UPGRADE_TEMPLATE_BILATERAL);
         upgrade.add("module_name", moduleName);
         upgrade.add("contract_name", templateDetails.name());
         upgrade.add("fields",templateDetails.getFieldNames());

@@ -30,11 +30,11 @@ public class UpgraderTest
 
         List<Module> result = modulesResult.get("Carbon");
 
-        Assert.assertEquals(2, result.size());
-        //Assert.assertEquals("UpgradeCarbonCertProposal", result.get(0).getName());
+        Assert.assertEquals(3, result.size());
+        Assert.assertEquals("UpgradeCarbonCertProposal", result.get(0).getName());
         //Assert.assertEquals("UpgradeCarbonCertProposalInitiate", result.get(1).getName());
-        Assert.assertEquals("UpgradeCarbonCert", result.get(0).getName());
-        Assert.assertEquals("UpgradeCarbonCertInitiate", result.get(1).getName());
+        Assert.assertEquals("UpgradeCarbonCert", result.get(1).getName());
+        Assert.assertEquals("UpgradeCarbonCertInitiate", result.get(2).getName());
 
         List<Module> intro = modulesResult.get("Intro.Iou");
         Assert.assertEquals(2, intro.size());
