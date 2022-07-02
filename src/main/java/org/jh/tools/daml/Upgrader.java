@@ -26,13 +26,13 @@ public class Upgrader
         Dar darFrom = Dar.readDar(archivePathFrom);
         Dar darTo = Dar.readDar(archivePathTo);
 
-        Map<String, List<TemplateDetails>> upgradeTemplateNamesByModule = identifyTemplatesToUpgrade(darFrom.getDamlLf(), darTo.getDamlLf());
+        Map<String, DamlDiffs> upgradeTemplateNamesByModule = identifyTemplatesToUpgrade(darFrom.getDamlLf(), darTo.getDamlLf());
         Map<String, List<Module>> upgrades = createUpgradeTemplates(upgradeTemplateNamesByModule);
         writeUpgradesToFiles(upgrades, outputPath, darTo.getSdkVersion(), archivePathFrom, archivePathTo);
         return upgrades;
     }
 
-    private static Map<String, List<TemplateDetails>> identifyTemplatesToUpgrade(DamlLf.Archive archiveFrom,
+    private static Map<String, DamlDiffs> identifyTemplatesToUpgrade(DamlLf.Archive archiveFrom,
                                                                                  DamlLf.Archive archiveTo)
     {
         LOGGER.info(archiveFrom.getHash());
@@ -52,12 +52,12 @@ public class Upgrader
         return DamlLfProtoUtils.findTemplatesThatAreInOneAndInTwo(payloadCurrent.proto(), payloadNew.proto());
     }
 
-    private static Map<String, List<Module>> createUpgradeTemplates(Map<String,List<TemplateDetails>> upgrades)
+    private static Map<String, List<Module>> createUpgradeTemplates(Map<String,DamlDiffs> upgrades)
     {
         Map<String, List<Module>> upgradesByModule = new HashMap<>();
         for(String moduleName : upgrades.keySet())
         {
-            List<TemplateDetails> contractNames = upgrades.get(moduleName);
+            List<TemplateDetails> contractNames = upgrades.get(moduleName).getInBothNoSchemaChange();
             List<Module> contracts = UpgradeTemplate.createUpgradeTemplatesContent(moduleName, contractNames);
             upgradesByModule.put(moduleName, contracts);
         }

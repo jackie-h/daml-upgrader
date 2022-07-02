@@ -11,9 +11,9 @@ import java.util.Map;
 
 public class DamlLfProtoUtils
 {
-    public static Map<String,List<TemplateDetails>> findTemplatesThatAreInOneAndInTwo(DamlLf.ArchivePayload one, DamlLf.ArchivePayload two)
+    public static Map<String,DamlDiffs> findTemplatesThatAreInOneAndInTwo(DamlLf.ArchivePayload one, DamlLf.ArchivePayload two)
     {
-        Map<String,List<TemplateDetails>> moduleTemplates = new HashMap<>();
+        Map<String,DamlDiffs> moduleTemplates = new HashMap<>();
 
         Map<String, Map<String, TemplateWithData>> moduleTemplatesOne = collectTemplates(one.getDamlLf1());
         Map<String, Map<String, TemplateWithData>> moduleTemplatesTwo = collectTemplates(two.getDamlLf1());
@@ -24,7 +24,7 @@ public class DamlLfProtoUtils
         {
             Map<String, TemplateWithData> templatesOne = moduleTemplatesOne.get(moduleName);
             Map<String, TemplateWithData> templatesTwo = moduleTemplatesTwo.get(moduleName);
-            List<TemplateDetails> templates = new ArrayList<>();
+            DamlDiffs diffs = new DamlDiffs();
 
             if (templatesTwo != null)
             {
@@ -36,17 +36,34 @@ public class DamlLfProtoUtils
                         TemplateWithData templateWithData = templatesOne.get(templateName);
                         List<String> signatories = signatoriesMap.getOrDefault(moduleName, new HashMap<>())
                                 .getOrDefault(templateName, new ArrayList<>());
-                        templates.add(TemplateDetails.from(templateName, signatories, templateWithData.dataType, one.getDamlLf1()));
+
+                        TemplateDetails details = TemplateDetails.from(templateName, signatories, templateWithData.dataType, one.getDamlLf1());
+
+                        if(isSchemaSame(templateWithData.dataType, template2.dataType))
+                        {
+                            diffs.addTemplateWithoutSchemaChange(details);
+                        }
+                        else
+                        {
+                            diffs.addTemplateWithSchemaChange(details);
+                        }
                     }
                 }
             }
-            if(!templates.isEmpty())
-            {
-                moduleTemplates.put(moduleName, templates);
-            }
+            moduleTemplates.put(moduleName, diffs);
         }
 
         return moduleTemplates;
+    }
+
+    public static boolean isSchemaSame(DamlLf1.DefDataType dataTypeOne, DamlLf1.DefDataType dataTypeTwo)
+    {
+        if(dataTypeOne.getRecord().getFieldsList().size() != dataTypeTwo.getRecord().getFieldsList().size())
+        {
+            return false;
+        }
+
+        return true;
     }
     
     public static Map<String,Map<String,List<String>>> findSignatories(DamlLf.ArchivePayload payload)
