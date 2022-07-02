@@ -59,6 +59,11 @@ public class Upgrader
         {
             List<TemplateDetails> contractNames = upgrades.get(moduleName).getInBothNoSchemaChange();
             List<Module> contracts = UpgradeTemplate.createUpgradeTemplatesContent(moduleName, contractNames);
+
+            for(TemplateDetails templateDetails : upgrades.get(moduleName).getInBothSchemaChange())
+            {
+               LOGGER.warning("Unable to upgrade template " + templateDetails.name() + " has a different schema");
+            }
             upgradesByModule.put(moduleName, contracts);
         }
         return upgradesByModule;
