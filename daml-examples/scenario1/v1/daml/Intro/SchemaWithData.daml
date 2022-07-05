@@ -1,0 +1,11 @@
+module Intro.SchemaWithData where
+
+import Data.Core(Money)
+
+template ContractWithData
+  with
+    issuer : Party
+    owner : Party
+    money : Money
+  where
+    signatory issuer, owner

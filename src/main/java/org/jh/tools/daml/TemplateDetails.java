@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 public class TemplateDetails
 {
@@ -54,6 +55,19 @@ public class TemplateDetails
     public boolean isBilateral()
     {
         return signatories.size() == 2 && fieldIsPartyType(signatories.get(0)) && fieldIsPartyType(signatories.get(1));
+    }
+
+    public boolean hasUpgradableFields()
+    {
+        //todo - handle complex record types
+        return this.fields.values().stream().allMatch(new Predicate<DamlLf1.Type>()
+        {
+            @Override
+            public boolean test(DamlLf1.Type type)
+            {
+                return type.hasPrim();
+            }
+        });
     }
 
     private boolean fieldIsPartyType(String fieldName)

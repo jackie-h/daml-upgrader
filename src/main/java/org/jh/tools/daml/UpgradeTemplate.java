@@ -108,6 +108,11 @@ public class UpgradeTemplate
 
         for(TemplateDetails templateDetails: contractNames)
         {
+            if(!templateDetails.hasUpgradableFields())
+            {
+                LOGGER.warning("Don't know how to upgrade template:" + templateDetails.name() + " has complex data types");
+                break;
+            }
             String upgradeModuleName = "Upgrade" + templateDetails.name();
             if(templateDetails.isUnilateral())
             {

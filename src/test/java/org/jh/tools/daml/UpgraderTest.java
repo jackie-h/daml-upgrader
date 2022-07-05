@@ -26,7 +26,7 @@ public class UpgraderTest
                 "daml-examples/scenario1/v2/.daml/dist/carbon-2.0.0.dar",
                 "target/scenario1");
 
-        Assert.assertEquals(5, modulesResult.keySet().size());
+        Assert.assertEquals(7, modulesResult.keySet().size());
 
         List<Module> result = modulesResult.get("Carbon");
 

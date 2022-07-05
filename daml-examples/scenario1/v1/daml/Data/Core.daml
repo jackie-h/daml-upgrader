@@ -1,0 +1,6 @@
+module Data.Core where
+
+data Money = Money with
+  currency : Text
+  amount : Decimal
+    deriving (Eq, Show)
