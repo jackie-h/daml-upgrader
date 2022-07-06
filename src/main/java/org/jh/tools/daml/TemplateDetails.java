@@ -63,29 +63,24 @@ public class TemplateDetails
     public boolean hasUpgradableFields()
     {
         //todo - handle complex record types and generics are also not complex
-        return this.fields.values().stream().allMatch(new Predicate<DamlLf1.Type>()
-        {
-            @Override
-            public boolean test(DamlLf1.Type type)
+        return this.fields.values().stream().allMatch(type -> {
+            if(type.hasInterned())
             {
-                if(type.hasInterned())
+                type = _package.getInternedTypes(type.getInterned());
+            }
+            if(type.hasPrim() && type.getPrim().getArgsCount() > 0)
+            {
+                for(DamlLf1.Type argType : type.getPrim().getArgsList())
                 {
-                    type = _package.getInternedTypes(type.getInterned());
-                }
-                if(type.hasPrim() && type.getPrim().getArgsCount() > 0)
-                {
-                    for(DamlLf1.Type argType : type.getPrim().getArgsList())
+                    if(argType.hasInterned())
                     {
-                        if(argType.hasInterned())
-                        {
-                            argType = _package.getInternedTypes(argType.getInterned());
-                            if(!argType.hasPrim() && !argType.hasNat()) //decimal types have natural args
-                                return false;
-                        }
+                        argType = _package.getInternedTypes(argType.getInterned());
+                        if(!argType.hasPrim() && !argType.hasNat()) //decimal types have natural args
+                            return false;
                     }
                 }
-                return type.hasPrim();
             }
+            return type.hasPrim();
         });
     }
 
