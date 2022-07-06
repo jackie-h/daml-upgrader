@@ -7,7 +7,13 @@ public class UpgraderClient
         String filePath1 = args[0];
         String filePath2 = args[1];
         String outputDirectory = args[2];
+        String dataDirectory = null;
 
-        Upgrader.createUpgrades(filePath1, filePath2, outputDirectory);
+        if(args.length == 4)
+        {
+            dataDirectory = args[4];
+        }
+
+        Upgrader.createUpgrades(filePath1, filePath2, outputDirectory, dataDirectory);
     }
 }

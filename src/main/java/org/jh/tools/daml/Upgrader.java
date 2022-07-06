@@ -17,7 +17,8 @@ public class Upgrader
 {
     private static final Logger LOGGER =  Logger.getLogger(Upgrader.class.getName());
 
-    public static Map<String, List<Module>> createUpgrades(String archivePathFrom, String archivePathTo, String outputPath)
+    public static Map<String, List<Module>> createUpgrades(String archivePathFrom, String archivePathTo,
+                                                           String outputPath, String dataDirectory)
     {
         LOGGER.info("Starting upgrade");
         LOGGER.info("Archive Path From=" + archivePathFrom);
@@ -28,7 +29,7 @@ public class Upgrader
 
         Map<String, DamlDiffs> upgradeTemplateNamesByModule = identifyTemplatesToUpgrade(darFrom.getDamlLf(), darTo.getDamlLf());
         Map<String, List<Module>> upgrades = createUpgradeTemplates(upgradeTemplateNamesByModule);
-        writeUpgradesToFiles(upgrades, outputPath, darTo.getSdkVersion(), archivePathFrom, archivePathTo);
+        writeUpgradesToFiles(upgrades, outputPath, darTo.getSdkVersion(), archivePathFrom, archivePathTo, dataDirectory);
         return upgrades;
     }
 
@@ -70,7 +71,8 @@ public class Upgrader
     }
 
     private static void writeUpgradesToFiles(Map<String, List<Module>> upgrades, String outpath,
-                                             String sdkVersion, String archivePathFrom, String archivePathTo)
+                                             String sdkVersion, String archivePathFrom,
+                                             String archivePathTo, String dataDirectory)
     {
         String archiveNameFrom = getFileNameWithoutExtension(archivePathFrom);
         String archiveNameTo = getFileNameWithoutExtension(archivePathTo);
