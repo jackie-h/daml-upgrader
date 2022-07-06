@@ -172,13 +172,8 @@ public class UpgradeTemplate
         return upgrade.render();
     }
 
-    public static String createProjectYaml(String sdkVersion, String archiveNameFrom, String archiveNameTo)
-    {
-        return createProjectYaml(sdkVersion, archiveNameFrom, archiveNameTo, archiveNameFrom, archiveNameTo);
-    }
-
     public static String createProjectYaml(String sdkVersion, String archiveNameFrom, String archiveNameTo,
-                                            String archiveDepFrom, String archiveDepTo)
+                                            String archiveDepFrom, String archiveDepTo, String dataDependencies)
     {
         ST upgrade = new ST(UPGRADE_PROJECT_YAML);
         upgrade.add("sdk_version", sdkVersion);
@@ -186,6 +181,14 @@ public class UpgradeTemplate
         upgrade.add("archive_name_v2", archiveNameTo);
         upgrade.add("archive_dep_v1", archiveDepFrom);
         upgrade.add("archive_dep_v2", archiveDepTo);
-        return upgrade.render();
+        String result = upgrade.render();
+
+        if(dataDependencies != null)
+        {
+            result = result + "data-dependencies:\n" +
+                    "  - " + dataDependencies;
+        }
+
+        return result;
     }
 }

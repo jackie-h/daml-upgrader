@@ -1,0 +1,5 @@
+module Finance.Data where
+
+data Asset = Asset with
+  name : Text
+    deriving (Eq, Show)

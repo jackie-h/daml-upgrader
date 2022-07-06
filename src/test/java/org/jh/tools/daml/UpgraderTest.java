@@ -13,6 +13,7 @@ public class UpgraderTest
     @BeforeClass
     public static void compileDaml() throws IOException
     {
+        DamlCommand.cleanBuildDar("daml-examples/data/v1");
         DamlCommand.cleanBuildDar("daml-examples/scenario1/v1");
         DamlCommand.cleanBuildDar("daml-examples/scenario1/v2");
         DamlCommand.cleanBuildDar("daml-examples/scenario2/v1");
@@ -24,7 +25,7 @@ public class UpgraderTest
     {
         Map<String, List<Module>> modulesResult = Upgrader.createUpgrades("daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar",
                 "daml-examples/scenario1/v2/.daml/dist/carbon-2.0.0.dar",
-                "target/scenario1", null);
+                "target/scenario1", "../../daml-examples/data/v1/.daml/dist/finance-1.0.0.dar");
 
         Assert.assertEquals(7, modulesResult.keySet().size());
 

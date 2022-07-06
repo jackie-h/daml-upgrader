@@ -9,3 +9,5 @@ dependencies:
   - daml-prim
   - daml-stdlib
   - daml-script
+data-dependencies:
+  - ../../data/v1/.daml/dist/finance-1.0.0.dar
