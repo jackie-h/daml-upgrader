@@ -9,3 +9,12 @@ template ContractWithData
     money : Money
   where
     signatory issuer, owner
+
+
+template ContractWithDataList
+  with
+    issuer : Party
+    owner : Party
+    money : [Money]
+  where
+    signatory issuer, owner

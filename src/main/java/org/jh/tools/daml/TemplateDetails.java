@@ -16,9 +16,12 @@ public class TemplateDetails
 
     private List<String> signatories = new ArrayList<>();
 
-    public TemplateDetails(String name)
+    private final DamlLf1.Package _package;
+
+    public TemplateDetails(String name, DamlLf1.Package _package)
     {
         this.name = name;
+        this._package = _package;
     }
 
     public void addField(String name, DamlLf1.Type type)
@@ -59,12 +62,28 @@ public class TemplateDetails
 
     public boolean hasUpgradableFields()
     {
-        //todo - handle complex record types
+        //todo - handle complex record types and generics are also not complex
         return this.fields.values().stream().allMatch(new Predicate<DamlLf1.Type>()
         {
             @Override
             public boolean test(DamlLf1.Type type)
             {
+                if(type.hasInterned())
+                {
+                    type = _package.getInternedTypes(type.getInterned());
+                }
+                if(type.hasPrim() && type.getPrim().getArgsCount() > 0)
+                {
+                    for(DamlLf1.Type argType : type.getPrim().getArgsList())
+                    {
+                        if(argType.hasInterned())
+                        {
+                            argType = _package.getInternedTypes(argType.getInterned());
+                            if(!argType.hasPrim() && !argType.hasNat()) //decimal types have natural args
+                                return false;
+                        }
+                    }
+                }
                 return type.hasPrim();
             }
         });
@@ -73,20 +92,20 @@ public class TemplateDetails
     private boolean fieldIsPartyType(String fieldName)
     {
         DamlLf1.Type type = this.fields.get(fieldName);
+        if(type.hasInterned())
+        {
+            type = _package.getInternedTypes(type.getInterned());
+        }
         return type.hasPrim() && type.getPrim().getPrim().getValueDescriptor().getName().equals("PARTY");
     }
 
     public static TemplateDetails from(String name, List<String> signatories, DamlLf1.DefDataType dataType, DamlLf1.Package _package)
     {
-        TemplateDetails templateDetails = new TemplateDetails(name);
+        TemplateDetails templateDetails = new TemplateDetails(name, _package);
         for(DamlLf1.FieldWithType ft: dataType.getRecord().getFieldsList())
         {
             String fieldName = _package.getInternedStrings(ft.getFieldInternedStr());
             DamlLf1.Type type = ft.getType();
-            if(type.hasInterned())
-            {
-                type = _package.getInternedTypes(type.getInterned());
-            }
             templateDetails.addField(fieldName,type);
             templateDetails.setSignatories(signatories);
         }
