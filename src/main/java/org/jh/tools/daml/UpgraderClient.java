@@ -15,14 +15,16 @@ public class UpgraderClient
             String filePath1 = args[0];
             String filePath2 = args[1];
             String outputDirectory = args[2];
-            String dataDependencies = null;
 
             if (args.length == 4)
             {
-                dataDependencies = args[4];
+                String dataDependencies = args[3];
+                Upgrader.createUpgrades(filePath1, filePath2, outputDirectory, dataDependencies);
             }
-
-            Upgrader.createUpgrades(filePath1, filePath2, outputDirectory, dataDependencies);
+            else
+            {
+                Upgrader.createUpgrades(filePath1, filePath2, outputDirectory, null);
+            }
         }
     }
 }
