@@ -32,6 +32,9 @@ public class Upgrader
         Map<String, Map<String, TemplateDetails>> upgradeTemplateNamesByModule = identifyTemplatesToUpgrade(darFrom.getDamlLf(), darTo.getDamlLf());
         Map<String, List<Module>> upgrades = createUpgradeTemplates(upgradeTemplateNamesByModule);
         writeUpgradesToFiles(upgrades, outputPath, darTo.getSdkVersion(), archivePathFrom, archivePathTo, dataDependencies);
+        List<TemplateDetails> details = upgradeTemplateNamesByModule.values().stream().flatMap(stringTemplateDetailsMap -> stringTemplateDetailsMap.values().stream())
+                .collect(Collectors.toList());
+        LOGGER.info(String.format("Created upgrades for %d/%d contracts", details.stream().filter(TemplateDetails::canAutoUpgrade).count(), details.size()));
         return upgrades;
     }
 
