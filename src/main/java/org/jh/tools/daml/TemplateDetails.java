@@ -61,7 +61,7 @@ public class TemplateDetails
         return signatories.size() == 2 && fieldIsPartyType(signatories.get(0)) && fieldIsPartyType(signatories.get(1));
     }
 
-    public boolean hasUpgradableFields()
+    private boolean hasUpgradableFields()
     {
         //todo - handle complex record types and generics are also not complex
         return this.fields.values().stream().allMatch(type -> {
@@ -87,7 +87,8 @@ public class TemplateDetails
 
     public boolean canAutoUpgrade()
     {
-        return TemplateDifferenceType.IN_BOTH_CONTENTS_ONLY_CHANGE.equals(this.differenceType);
+        return TemplateDifferenceType.IN_BOTH_CONTENTS_ONLY_CHANGE.equals(this.differenceType)
+                && this.hasUpgradableFields() && (this.isUnilateral() || this.isBilateral());
     }
 
     private boolean fieldIsPartyType(String fieldName)

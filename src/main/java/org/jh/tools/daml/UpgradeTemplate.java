@@ -103,35 +103,28 @@ public class UpgradeTemplate
             "  <archive_name_v1>: V1\n" +
             "  <archive_name_v2>: V2\n";
 
-    public static List<Module> createUpgradeTemplatesContent(String moduleName, List<TemplateDetails> templatesToUpgrade)
+    public static List<Module> createUpgradeTemplatesContent(String moduleName, List<TemplateDetails> templates)
     {
         List<Module> contracts = new ArrayList<>();
 
-        templatesToUpgrade.forEach(templateDetails ->
+        templates.stream().filter(TemplateDetails::canAutoUpgrade).forEach(templateDetails ->
         {
-            if(!templateDetails.hasUpgradableFields())
+            String upgradeModuleName = "Upgrade" + templateDetails.name();
+            if (templateDetails.isUnilateral())
             {
-                LOGGER.warning("Don't know how to upgrade template:" + templateDetails.name() + " has complex data types");
+                String upgradeTemplate = createUnilateralUpgradeTemplate(moduleName, templateDetails);
+                contracts.add(new Module(upgradeModuleName, upgradeTemplate));
+            }
+            else if (templateDetails.isBilateral())
+            {
+                String upgradeTemplate = createBilateralUpgradeTemplate(moduleName, templateDetails);
+                contracts.add(new Module(upgradeModuleName, upgradeTemplate));
+                String upgradeInitiateScript = createInitiateUpgradeScript(moduleName, templateDetails);
+                contracts.add(new Module("Upgrade" + templateDetails.name() + "Initiate", upgradeInitiateScript));
             }
             else
             {
-                String upgradeModuleName = "Upgrade" + templateDetails.name();
-                if (templateDetails.isUnilateral())
-                {
-                    String upgradeTemplate = createUnilateralUpgradeTemplate(moduleName, templateDetails);
-                    contracts.add(new Module(upgradeModuleName, upgradeTemplate));
-                }
-                else if (templateDetails.isBilateral())
-                {
-                    String upgradeTemplate = createBilateralUpgradeTemplate(moduleName, templateDetails);
-                    contracts.add(new Module(upgradeModuleName, upgradeTemplate));
-                    String upgradeInitiateScript = createInitiateUpgradeScript(moduleName, templateDetails);
-                    contracts.add(new Module("Upgrade" + templateDetails.name() + "Initiate", upgradeInitiateScript));
-                }
-                else
-                {
-                    LOGGER.warning("Don't know how to upgrade template:" + templateDetails.name() + " has more than two signatories");
-                }
+                throw new RuntimeException("Don't know how to upgrade. Template should have been filtered out");
             }
         });
         return contracts;
