@@ -6,11 +6,12 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
 
 public class TemplateDetails
 {
     private final String name;
+
+    private TemplateDifferenceType differenceType = null;
 
     private final Map<String,DamlLf1.Type> fields = new LinkedHashMap<>();
 
@@ -84,6 +85,11 @@ public class TemplateDetails
         });
     }
 
+    public boolean canAutoUpgrade()
+    {
+        return TemplateDifferenceType.IN_BOTH_CONTENTS_ONLY_CHANGE.equals(this.differenceType);
+    }
+
     private boolean fieldIsPartyType(String fieldName)
     {
         DamlLf1.Type type = this.fields.get(fieldName);
@@ -94,16 +100,18 @@ public class TemplateDetails
         return type.hasPrim() && type.getPrim().getPrim().getValueDescriptor().getName().equals("PARTY");
     }
 
-    public static TemplateDetails from(String name, List<String> signatories, DamlLf1.DefDataType dataType, DamlLf1.Package _package)
+    public void setDifferenceType(TemplateDifferenceType differenceType)
     {
-        TemplateDetails templateDetails = new TemplateDetails(name, _package);
+        this.differenceType = differenceType;
+    }
+
+    public void addSchemaData(DamlLf1.DefDataType dataType)
+    {
         for(DamlLf1.FieldWithType ft: dataType.getRecord().getFieldsList())
         {
             String fieldName = _package.getInternedStrings(ft.getFieldInternedStr());
             DamlLf1.Type type = ft.getType();
-            templateDetails.addField(fieldName,type);
-            templateDetails.setSignatories(signatories);
+            this.addField(fieldName,type);
         }
-        return templateDetails;
     }
 }

@@ -11,9 +11,9 @@ import java.util.Map;
 
 public class DamlLfProtoUtils
 {
-    public static Map<String,DamlDiffs> findTemplatesThatAreInOneAndInTwo(DamlLf.ArchivePayload one, DamlLf.ArchivePayload two)
+    public static Map<String,Map<String,TemplateDetails>> findTemplatesThatAreInOneAndInTwo(DamlLf.ArchivePayload one, DamlLf.ArchivePayload two)
     {
-        Map<String,DamlDiffs> moduleTemplates = new HashMap<>();
+        Map<String,Map<String,TemplateDetails>> moduleTemplates = new HashMap<>();
 
         Map<String, Map<String, TemplateWithData>> moduleTemplatesOne = collectTemplates(one.getDamlLf1());
         Map<String, Map<String, TemplateWithData>> moduleTemplatesTwo = collectTemplates(two.getDamlLf1());
@@ -24,12 +24,13 @@ public class DamlLfProtoUtils
         {
             Map<String, TemplateWithData> templatesOne = moduleTemplatesOne.get(moduleName);
             Map<String, TemplateWithData> templatesTwo = moduleTemplatesTwo.get(moduleName);
-            DamlDiffs diffs = new DamlDiffs();
+            Map<String, TemplateDetails> templates = new HashMap<>();
 
             if (templatesTwo != null)
             {
                 for (String templateName : templatesOne.keySet())
                 {
+                    TemplateDetails templateDetails = new TemplateDetails(templateName, one.getDamlLf1());
                     TemplateWithData template2 = templatesTwo.get(templateName);
                     if (template2 != null)
                     {
@@ -37,20 +38,26 @@ public class DamlLfProtoUtils
                         List<String> signatories = signatoriesMap.getOrDefault(moduleName, new HashMap<>())
                                 .getOrDefault(templateName, new ArrayList<>());
 
-                        TemplateDetails details = TemplateDetails.from(templateName, signatories, templateWithData.dataType, one.getDamlLf1());
+                        templateDetails.setSignatories(signatories);
+                        templateDetails.addSchemaData(templateWithData.dataType);
 
                         if(isSchemaSame(templateWithData.dataType, one.getDamlLf1(), template2.dataType, two.getDamlLf1()))
                         {
-                            diffs.addTemplateWithoutSchemaChange(details);
+                            templateDetails.setDifferenceType(TemplateDifferenceType.IN_BOTH_CONTENTS_ONLY_CHANGE);
                         }
                         else
                         {
-                            diffs.addTemplateWithSchemaChange(details);
+                            templateDetails.setDifferenceType(TemplateDifferenceType.IN_BOTH_SCHEMA_CHANGE);
                         }
                     }
+                    else
+                    {
+                        templateDetails.setDifferenceType(TemplateDifferenceType.TEMPLATE_REMOVED);
+                    }
+                    templates.put(templateName, templateDetails);
                 }
             }
-            moduleTemplates.put(moduleName, diffs);
+            moduleTemplates.put(moduleName, templates);
         }
 
         return moduleTemplates;

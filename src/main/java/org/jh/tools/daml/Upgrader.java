@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Upgrader
 {
@@ -27,14 +29,14 @@ public class Upgrader
         Dar darFrom = Dar.readDar(archivePathFrom);
         Dar darTo = Dar.readDar(archivePathTo);
 
-        Map<String, DamlDiffs> upgradeTemplateNamesByModule = identifyTemplatesToUpgrade(darFrom.getDamlLf(), darTo.getDamlLf());
+        Map<String, Map<String, TemplateDetails>> upgradeTemplateNamesByModule = identifyTemplatesToUpgrade(darFrom.getDamlLf(), darTo.getDamlLf());
         Map<String, List<Module>> upgrades = createUpgradeTemplates(upgradeTemplateNamesByModule);
         writeUpgradesToFiles(upgrades, outputPath, darTo.getSdkVersion(), archivePathFrom, archivePathTo, dataDependencies);
         return upgrades;
     }
 
-    private static Map<String, DamlDiffs> identifyTemplatesToUpgrade(DamlLf.Archive archiveFrom,
-                                                                                 DamlLf.Archive archiveTo)
+    private static Map<String, Map<String, TemplateDetails>> identifyTemplatesToUpgrade(DamlLf.Archive archiveFrom,
+                                                                                        DamlLf.Archive archiveTo)
     {
         LOGGER.info(archiveFrom.getHash());
         LOGGER.info(archiveTo.getHash());
@@ -53,18 +55,21 @@ public class Upgrader
         return DamlLfProtoUtils.findTemplatesThatAreInOneAndInTwo(payloadCurrent.proto(), payloadNew.proto());
     }
 
-    private static Map<String, List<Module>> createUpgradeTemplates(Map<String,DamlDiffs> upgrades)
+    private static Map<String, List<Module>> createUpgradeTemplates(Map<String, Map<String, TemplateDetails>> upgrades)
     {
         Map<String, List<Module>> upgradesByModule = new HashMap<>();
         for(String moduleName : upgrades.keySet())
         {
-            List<TemplateDetails> contractNames = upgrades.get(moduleName).getInBothNoSchemaChange();
-            List<Module> contracts = UpgradeTemplate.createUpgradeTemplatesContent(moduleName, contractNames);
+            Map<String, TemplateDetails> templates = upgrades.get(moduleName);
+            List<TemplateDetails> upgradeable = templates.values().stream()
+                    .filter(TemplateDetails::canAutoUpgrade)
+                    .collect(Collectors.toList());
 
-            for(TemplateDetails templateDetails : upgrades.get(moduleName).getInBothSchemaChange())
-            {
-               LOGGER.warning("Unable to upgrade template " + templateDetails.name() + " has a different schema");
-            }
+            List<Module> contracts = UpgradeTemplate.createUpgradeTemplatesContent(moduleName, upgradeable);
+
+            templates.values().stream().filter(t -> !t.canAutoUpgrade()).forEach(t -> {
+                LOGGER.warning("Unable to upgrade template " + t.name() + " has a different schema");
+            });
             upgradesByModule.put(moduleName, contracts);
         }
         return upgradesByModule;
