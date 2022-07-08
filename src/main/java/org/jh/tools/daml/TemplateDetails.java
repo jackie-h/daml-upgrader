@@ -6,9 +6,12 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class TemplateDetails
 {
+    private static final Logger LOGGER =  Logger.getLogger(TemplateDetails.class.getName());
+
     private final String name;
 
     private TemplateDifferenceType differenceType = null;
@@ -116,6 +119,11 @@ public class TemplateDetails
         else
         {
             this.upgradeDecision = UpgradeDecision.YES;
+        }
+
+        if(this.upgradeDecision != UpgradeDecision.YES)
+        {
+            LOGGER.warning("Unable to upgrade " + this.name + " because: " + this.upgradeDecision.getMessage());
         }
     }
 

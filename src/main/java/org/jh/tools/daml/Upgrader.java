@@ -68,10 +68,6 @@ public class Upgrader
                     .collect(Collectors.toList());
 
             List<Module> contracts = UpgradeTemplate.createUpgradeTemplatesContent(moduleName, upgradeable);
-
-            templates.values().stream().filter(t -> !t.canAutoUpgrade()).forEach(t -> {
-                LOGGER.warning("Unable to upgrade template " + t.name() + " has a different schema");
-            });
             upgradesByModule.put(moduleName, contracts);
         }
         return upgradesByModule;
