@@ -49,7 +49,7 @@ public class Dar
             while((entry = is.getNextEntry()) != null)
             {
                 String name = entry.getName();
-                LOGGER.info(name);
+                LOGGER.fine(name);
 
                 Path zipContentPath = Paths.get(name);
                 String itemName = zipContentPath.getFileName().toString();
@@ -60,7 +60,7 @@ public class Dar
                     byte[] bytes = is.readAllBytes();
                     archiveProto = DamlLf.Archive.parseFrom(bytes);
                     archives.put(archiveProto.getHash(), archiveProto);
-                    LOGGER.info(archiveProto.getHash());
+                    LOGGER.fine(archiveProto.getHash());
                 }
                 else if (itemName.endsWith(".conf"))
                 {
