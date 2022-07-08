@@ -1,10 +1,15 @@
 package org.jh.tools.daml;
 
+import com.daml.daml_lf_dev.DamlLf1;
+import com.daml.lf.archive.ArchivePayload;
+import com.daml.lf.archive.Reader;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -23,41 +28,29 @@ public class UpgraderTest
     @Test
     public void testScenario1() throws IOException
     {
-        Map<String, List<Module>> modulesResult = Upgrader.createUpgrades("daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar",
+        Upgrader.createUpgrades("daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar",
                 "daml-examples/scenario1/v2/.daml/dist/carbon-2.0.0.dar",
                 "target/scenario1", "../../daml-examples/data/v1/.daml/dist/finance-1.0.0.dar");
 
-        Assert.assertEquals(7, modulesResult.keySet().size());
-
-        List<Module> result = modulesResult.get("Carbon");
-
-        Assert.assertEquals(3, result.size());
-        Assert.assertEquals("UpgradeCarbonCertProposal", result.get(0).getName());
-        //Assert.assertEquals("UpgradeCarbonCertProposalInitiate", result.get(1).getName());
-        Assert.assertEquals("UpgradeCarbonCert", result.get(1).getName());
-        Assert.assertEquals("UpgradeCarbonCertInitiate", result.get(2).getName());
-
-        List<Module> intro = modulesResult.get("Intro.Iou");
-        Assert.assertEquals(2, intro.size());
-        Assert.assertEquals("UpgradeIou", intro.get(0).getName());
-        Assert.assertEquals("UpgradeIouInitiate", intro.get(1).getName());
-
-        List<Module> invite = modulesResult.get("Intro.Invite");
-        Assert.assertEquals(2, invite.size());
-        Assert.assertEquals("UpgradeInvitation", invite.get(0).getName());
-        Assert.assertEquals("UpgradeInvitationInitiate", invite.get(1).getName());
-
-        List<Module> schemaChanges = modulesResult.get("Intro.SchemaChanges");
-        Assert.assertEquals(4, schemaChanges.size());
-        Assert.assertEquals("UpgradeSame", schemaChanges.get(0).getName());
-        Assert.assertEquals("UpgradeSameInitiate", schemaChanges.get(1).getName());
-        Assert.assertEquals("UpgradeReorderField", schemaChanges.get(2).getName());
-        Assert.assertEquals("UpgradeReorderFieldInitiate", schemaChanges.get(3).getName());
-
-        List<Module> multiParty = modulesResult.get("Intro.MultiParty");
-        Assert.assertEquals(0, multiParty.size());
-
         DamlCommand.cleanBuildDar("target/scenario1");
+
+        Dar output = Dar.readDar("target/scenario1/.daml/dist/upgrade-1.0.0.dar");
+        ArchivePayload result = Reader.readArchive(output.getDamlLf()).right().get();
+        List<String> templates = DamlLfProtoUtils.collectTemplateNames(result.proto());
+
+        Assert.assertEquals(11, templates.size());
+        Assert.assertEquals("Carbon.UpgradeCarbonCertProposal[UpgradeCarbonCertProposalAgreement]\n" +
+                        "Carbon.UpgradeCarbonCert[UpgradeCarbonCertAgreement]\n" +
+                        "Carbon.UpgradeCarbonCert[UpgradeCarbonCertProposal]\n" +
+                        "Intro.Invite.UpgradeInvitation[UpgradeInvitationAgreement]\n" +
+                        "Intro.Invite.UpgradeInvitation[UpgradeInvitationProposal]\n" +
+                        "Intro.Iou.UpgradeIou[UpgradeIouAgreement]\n" +
+                        "Intro.Iou.UpgradeIou[UpgradeIouProposal]\n" +
+                        "Intro.SchemaChanges.UpgradeReorderField[UpgradeReorderFieldAgreement]\n" +
+                        "Intro.SchemaChanges.UpgradeReorderField[UpgradeReorderFieldProposal]\n" +
+                        "Intro.SchemaChanges.UpgradeSame[UpgradeSameAgreement]\n" +
+                        "Intro.SchemaChanges.UpgradeSame[UpgradeSameProposal]",
+                String.join("\n", templates));
     }
 
     @Test

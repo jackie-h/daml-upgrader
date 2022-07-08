@@ -2,6 +2,8 @@ package org.jh.tools.daml;
 
 import com.daml.daml_lf_dev.DamlLf;
 import com.daml.daml_lf_dev.DamlLf1;
+import com.daml.lf.archive.ArchivePayload;
+import com.daml.lf.archive.Reader;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -61,6 +63,25 @@ public class DamlLfProtoUtils
         }
 
         return moduleTemplates;
+    }
+
+    public static List<String> collectTemplateNames(DamlLf.ArchivePayload input)
+    {
+        List<String> templates = new ArrayList<>();
+        DamlLf1.Package _package = input.getDamlLf1();
+
+        for(DamlLf1.Module module : _package.getModulesList())
+        {
+            String moduleName = DamlLfProtoUtils.getName(_package, module.getNameInternedDname());
+            for(DamlLf1.DefTemplate template: module.getTemplatesList())
+            {
+                String templateName = DamlLfProtoUtils.getName(_package, template.getTyconInternedDname());
+                templates.add(moduleName + "[" + templateName + "]");
+            }
+        }
+
+        Collections.sort(templates);
+        return templates;
     }
 
     public static boolean isSchemaSame(DamlLf1.DefDataType dataTypeOne, DamlLf1.Package _packageOne,
