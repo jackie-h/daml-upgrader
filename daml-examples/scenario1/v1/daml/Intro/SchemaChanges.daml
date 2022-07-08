@@ -16,6 +16,14 @@ template AddField
   where
     signatory issuer, owner
 
+template AddOptionalField
+  with
+    issuer : Party
+    owner : Party
+    amount : Decimal
+  where
+    signatory issuer, owner
+
 template RemoveField
   with
     issuer : Party
