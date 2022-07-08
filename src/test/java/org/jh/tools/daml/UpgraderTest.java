@@ -1,6 +1,5 @@
 package org.jh.tools.daml;
 
-import com.daml.daml_lf_dev.DamlLf1;
 import com.daml.lf.archive.ArchivePayload;
 import com.daml.lf.archive.Reader;
 import org.junit.Assert;
@@ -8,8 +7,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
