@@ -13,6 +13,8 @@ public class TemplateDetails
 
     private TemplateDifferenceType differenceType = null;
 
+    private UpgradeDecision upgradeDecision = null;
+
     private final Map<String,DamlLf1.Type> fields = new LinkedHashMap<>();
 
     private List<String> signatories = new ArrayList<>();
@@ -87,8 +89,34 @@ public class TemplateDetails
 
     public boolean canAutoUpgrade()
     {
-        return TemplateDifferenceType.IN_BOTH_CONTENTS_ONLY_CHANGE.equals(this.differenceType)
-                && this.hasUpgradableFields() && (this.isUnilateral() || this.isBilateral());
+        if (this.upgradeDecision == null)
+            computeUpgradeDecision();
+
+        return this.upgradeDecision == UpgradeDecision.YES;
+    }
+
+    private void computeUpgradeDecision()
+    {
+        if (TemplateDifferenceType.IN_BOTH_SCHEMA_CHANGE.equals(this.differenceType))
+        {
+            this.upgradeDecision = UpgradeDecision.NO_SCHEMA_CHANGE;
+        }
+        else if (TemplateDifferenceType.TEMPLATE_REMOVED.equals(this.differenceType))
+        {
+            this.upgradeDecision = UpgradeDecision.NO_TEMPLATE_REMOVED;
+        }
+        else if (!(this.isUnilateral() || this.isBilateral()))
+        {
+            this.upgradeDecision = UpgradeDecision.NO_MULTI_PARTY;
+        }
+        else if (!this.hasUpgradableFields())
+        {
+            this.upgradeDecision = UpgradeDecision.NO_NON_PRIMITIVE_TYPES;
+        }
+        else
+        {
+            this.upgradeDecision = UpgradeDecision.YES;
+        }
     }
 
     private boolean fieldIsPartyType(String fieldName)
