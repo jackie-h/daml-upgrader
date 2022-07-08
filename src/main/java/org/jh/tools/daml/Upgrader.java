@@ -18,7 +18,7 @@ public class Upgrader
 {
     private static final Logger LOGGER =  Logger.getLogger(Upgrader.class.getName());
 
-    public static Map<String, List<Module>> createUpgrades(String archivePathFrom, String archivePathTo,
+    public static Map<String, Map<String, TemplateDetails>> createUpgrades(String archivePathFrom, String archivePathTo,
                                                            String outputPath, String dataDependencies)
     {
         LOGGER.info("Starting upgrade");
@@ -34,7 +34,7 @@ public class Upgrader
         List<TemplateDetails> details = upgradeTemplateNamesByModule.values().stream().flatMap(stringTemplateDetailsMap -> stringTemplateDetailsMap.values().stream())
                 .collect(Collectors.toList());
         LOGGER.info(String.format("Created upgrades for %d/%d contracts", details.stream().filter(TemplateDetails::canAutoUpgrade).count(), details.size()));
-        return upgrades;
+        return upgradeTemplateNamesByModule;
     }
 
     private static Map<String, Map<String, TemplateDetails>> identifyTemplatesToUpgrade(DamlLf.Archive archiveFrom,
