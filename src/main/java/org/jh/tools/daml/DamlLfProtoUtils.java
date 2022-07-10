@@ -44,19 +44,10 @@ public class DamlLfProtoUtils
                                 template2.dataType.getRecord(), two.getDamlLf1()
                         );
                         templateDetails.setFieldsDiffs(fieldsDiffs);
-
-                        if(fieldsDiffs.isSchemaSame())
-                        {
-                            templateDetails.setDifferenceType(TemplateDifferenceType.IN_BOTH_CONTENTS_ONLY_CHANGE);
-                        }
-                        else
-                        {
-                            templateDetails.setDifferenceType(TemplateDifferenceType.IN_BOTH_SCHEMA_CHANGE);
-                        }
                     }
                     else
                     {
-                        templateDetails.setDifferenceType(TemplateDifferenceType.TEMPLATE_REMOVED);
+                        templateDetails.setTemplateRemoved();
                     }
                     templates.put(templateName, templateDetails);
                 }

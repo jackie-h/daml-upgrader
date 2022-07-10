@@ -16,7 +16,7 @@ public class TemplateDetails
 
     private final DamlLf1.Package _package;
 
-    private TemplateDifferenceType differenceType = null;
+    private boolean templateRemoved = false;
 
     private UpgradeDecision upgradeDecision = null;
 
@@ -75,11 +75,7 @@ public class TemplateDetails
 
     private void computeUpgradeDecision()
     {
-        if (TemplateDifferenceType.IN_BOTH_SCHEMA_CHANGE.equals(this.differenceType))
-        {
-            this.upgradeDecision = UpgradeDecision.NO_SCHEMA_CHANGE;
-        }
-        else if (TemplateDifferenceType.TEMPLATE_REMOVED.equals(this.differenceType))
+        if (this.templateRemoved)
         {
             this.upgradeDecision = UpgradeDecision.NO_TEMPLATE_REMOVED;
         }
@@ -90,6 +86,10 @@ public class TemplateDetails
         else if (!this.fieldsDiffs.hasUpgradableFields(this._package))
         {
             this.upgradeDecision = UpgradeDecision.NO_NON_PRIMITIVE_TYPES;
+        }
+        else if (!this.fieldsDiffs.isSchemaSame())
+        {
+            this.upgradeDecision = UpgradeDecision.NO_SCHEMA_CHANGE;
         }
         else
         {
@@ -102,9 +102,9 @@ public class TemplateDetails
         }
     }
 
-    public void setDifferenceType(TemplateDifferenceType differenceType)
+    public void setTemplateRemoved()
     {
-        this.differenceType = differenceType;
+        this.templateRemoved = true;
     }
 
     public void setFieldsDiffs(FieldsDiffs fieldsDiffs)
