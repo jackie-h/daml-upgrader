@@ -11,14 +11,14 @@ import java.util.Map;
 
 public class DamlLfProtoUtils
 {
-    public static Map<String,Map<String,TemplateDetails>> findTemplatesThatAreInOneAndInTwo(DamlLf.ArchivePayload one, DamlLf.ArchivePayload two)
+    public static Map<String,Map<String,TemplateDetails>> findTemplatesThatAreInOneAndInTwo(DamlLf.ArchivePayload archiveFrom, DamlLf.ArchivePayload archiveTo)
     {
         Map<String,Map<String,TemplateDetails>> moduleTemplates = new HashMap<>();
 
-        Map<String, Map<String, TemplateWithData>> moduleTemplatesOne = collectTemplates(one.getDamlLf1());
-        Map<String, Map<String, TemplateWithData>> moduleTemplatesTwo = collectTemplates(two.getDamlLf1());
+        Map<String, Map<String, TemplateWithData>> moduleTemplatesOne = collectTemplates(archiveFrom.getDamlLf1());
+        Map<String, Map<String, TemplateWithData>> moduleTemplatesTwo = collectTemplates(archiveTo.getDamlLf1());
 
-        Map<String,Map<String,List<String>>> signatoriesMap = findSignatories(one);
+        Map<String,Map<String,List<String>>> signatoriesMap = findSignatories(archiveFrom);
 
         for(String moduleName: moduleTemplatesOne.keySet())
         {
@@ -30,7 +30,7 @@ public class DamlLfProtoUtils
             {
                 for (String templateName : templatesOne.keySet())
                 {
-                    TemplateDetails templateDetails = new TemplateDetails(templateName, one.getDamlLf1());
+                    TemplateDetails templateDetails = new TemplateDetails(templateName, archiveFrom.getDamlLf1());
                     TemplateWithData template2 = templatesTwo.get(templateName);
                     if (template2 != null)
                     {
@@ -40,8 +40,8 @@ public class DamlLfProtoUtils
 
                         templateDetails.setSignatories(signatories);
                         FieldsDiffs fieldsDiffs = FieldsDiffs.create(
-                                templateWithData.dataType.getRecord(), one.getDamlLf1(),
-                                template2.dataType.getRecord(), two.getDamlLf1()
+                                templateWithData.dataType.getRecord(), archiveFrom.getDamlLf1(),
+                                template2.dataType.getRecord(), archiveTo.getDamlLf1()
                         );
                         templateDetails.setFieldsDiffs(fieldsDiffs);
                     }

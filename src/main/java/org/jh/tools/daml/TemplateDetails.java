@@ -87,7 +87,7 @@ public class TemplateDetails
         {
             this.upgradeDecision = UpgradeDecision.NO_NON_PRIMITIVE_TYPES;
         }
-        else if (!this.fieldsDiffs.isSchemaSame())
+        else if (!this.fieldsDiffs.isSchemaUpgradable())
         {
             this.upgradeDecision = UpgradeDecision.NO_SCHEMA_CHANGE;
         }

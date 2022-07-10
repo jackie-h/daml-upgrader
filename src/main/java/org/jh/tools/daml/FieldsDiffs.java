@@ -13,29 +13,34 @@ public class FieldsDiffs
 {
     private List<String> newFields = new ArrayList<>();
     private List<String> removedFields = new ArrayList<>();
+    private List<String> fieldsInBoth = new ArrayList<>();
 
-    private FieldsIndex fieldsIndex1;
-    private FieldsIndex fieldsIndex2;
+    private FieldsIndex fieldsIndexFrom;
+    private FieldsIndex fieldsIndexTo;
 
-    public static FieldsDiffs create(DamlLf1.DefDataType.Fields fields1, DamlLf1.Package _package1,
-                                      DamlLf1.DefDataType.Fields fields2, DamlLf1.Package _package2)
+    public static FieldsDiffs create(DamlLf1.DefDataType.Fields fieldsFrom, DamlLf1.Package _package1,
+                                      DamlLf1.DefDataType.Fields fieldsTo, DamlLf1.Package _package2)
     {
         FieldsDiffs diffs = new FieldsDiffs();
-        diffs.fieldsIndex1 = FieldsIndex.create(fields1, _package1);
-        diffs.fieldsIndex2 = FieldsIndex.create(fields2, _package2);
+        diffs.fieldsIndexFrom = FieldsIndex.create(fieldsFrom, _package1);
+        diffs.fieldsIndexTo = FieldsIndex.create(fieldsTo, _package2);
 
-        for(String field : diffs.fieldsIndex1.fields.keySet())
+        for(String field : diffs.fieldsIndexFrom.fields.keySet())
         {
-            if(diffs.fieldsIndex2.fields.get(field) == null)
-            {
-                diffs.newFields.add(field);
-            }
-        }
-        for(String field : diffs.fieldsIndex2.fields.keySet())
-        {
-            if(diffs.fieldsIndex1.fields.get(field) == null)
+            if(diffs.fieldsIndexTo.fields.get(field) == null)
             {
                 diffs.removedFields.add(field);
+            }
+            else
+            {
+                diffs.fieldsInBoth.add(field);
+            }
+        }
+        for(String field : diffs.fieldsIndexTo.fields.keySet())
+        {
+            if(diffs.fieldsIndexFrom.fields.get(field) == null)
+            {
+                diffs.newFields.add(field);
             }
         }
         return diffs;
@@ -43,19 +48,19 @@ public class FieldsDiffs
 
     public Iterable<String> getFieldNames()
     {
-        return this.fieldsIndex1.fields.keySet();
+        return this.fieldsIndexTo.fields.keySet();
     }
 
     protected boolean fieldIsPartyType(String fieldName)
     {
-        FieldsIndex.Type type = this.fieldsIndex1.fields.get(fieldName);
+        FieldsIndex.Type type = this.fieldsIndexFrom.fields.get(fieldName);
         return type.type.hasPrim() && type.type.getPrim().getPrim().getValueDescriptor().getName().equals("PARTY");
     }
 
     protected boolean hasUpgradableFields(DamlLf1.Package _package)
     {
         //todo - handle complex record types and generics are also not complex
-        return this.fieldsIndex1.fields.values().stream().allMatch(type -> {
+        return this.fieldsIndexFrom.fields.values().stream().allMatch(type -> {
             if(type.type.hasPrim() && type.type.getPrim().getArgsCount() > 0)
             {
                 for(DamlLf1.Type argType : type.type.getPrim().getArgsList())
@@ -72,32 +77,23 @@ public class FieldsDiffs
         });
     }
 
-    protected boolean isSchemaSame()
+    protected boolean isSchemaUpgradable()
     {
-        if(this.fieldsIndex1.fields.keySet().size() != this.fieldsIndex2.fields.keySet().size())
-        {
-            return false;
-        }
-        else
-        {
-            Map<String, FieldsIndex.Type> fieldsOne = this.fieldsIndex1.fields;
-            Map<String, FieldsIndex.Type> fieldsTwo = this.fieldsIndex2.fields;
+        return this.fieldsInBothSame() && this.newFields.isEmpty();
+    }
 
-            for(String fieldName : fieldsOne.keySet())
+    private boolean fieldsInBothSame()
+    {
+
+        for(String fieldName : this.fieldsInBoth)
+        {
+            FieldsIndex.Type type1 = this.fieldsIndexFrom.fields.get(fieldName);
+            FieldsIndex.Type type2 = this.fieldsIndexTo.fields.get(fieldName);
+            if(!type1.typeAsString.equals(type2.typeAsString))
             {
-                FieldsIndex.Type type1 = fieldsOne.get(fieldName);
-                FieldsIndex.Type type2 = fieldsTwo.get(fieldName);
-                if(type2 == null)
-                {
-                    return false;
-                }
-                if(!type1.typeAsString.equals(type2.typeAsString))
-                {
-                    return false;
-                }
+                return false;
             }
         }
-
         return true;
     }
 
