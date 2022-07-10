@@ -41,7 +41,11 @@ public class DamlLfProtoUtils
                                 .getOrDefault(templateName, new ArrayList<>());
 
                         templateDetails.setSignatories(signatories);
-                        templateDetails.addSchemaData(templateWithData.dataType);
+                        FieldsDiffs fieldsDiffs = FieldsDiffs.create(
+                                templateWithData.dataType.getRecord(), one.getDamlLf1(),
+                                template2.dataType.getRecord(), two.getDamlLf1()
+                        );
+                        templateDetails.setFieldsDiffs(fieldsDiffs);
 
                         if(isSchemaSame(templateWithData.dataType, one.getDamlLf1(), template2.dataType, two.getDamlLf1()))
                         {
@@ -82,6 +86,20 @@ public class DamlLfProtoUtils
 
         Collections.sort(templates);
         return templates;
+    }
+
+    public static DamlLf1.Type resolveType(DamlLf1.Type type, DamlLf1.Package _package)
+    {
+        if(type.hasInterned())
+        {
+            type = _package.getInternedTypes(type.getInterned());
+        }
+        return type;
+    }
+
+    public static boolean isOptional(DamlLf1.Type type, DamlLf1.Package _package)
+    {
+        return false;
     }
 
     public static boolean isSchemaSame(DamlLf1.DefDataType dataTypeOne, DamlLf1.Package _packageOne,

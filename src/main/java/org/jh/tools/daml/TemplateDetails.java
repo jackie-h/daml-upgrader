@@ -14,25 +14,20 @@ public class TemplateDetails
 
     private final String name;
 
+    private FieldsDiffs fieldsDiffs = null;
+
+    private final DamlLf1.Package _package;
+
     private TemplateDifferenceType differenceType = null;
 
     private UpgradeDecision upgradeDecision = null;
 
-    private final Map<String,DamlLf1.Type> fields = new LinkedHashMap<>();
-
     private List<String> signatories = new ArrayList<>();
-
-    private final DamlLf1.Package _package;
 
     public TemplateDetails(String name, DamlLf1.Package _package)
     {
         this.name = name;
         this._package = _package;
-    }
-
-    public void addField(String name, DamlLf1.Type type)
-    {
-        this.fields.put(name, type);
     }
 
     public void setSignatories(List<String> signatories)
@@ -47,7 +42,7 @@ public class TemplateDetails
 
     public Iterable<String> getFieldNames()
     {
-        return fields.keySet();
+        return this.fieldsDiffs.getFieldNames();
     }
 
     public List<String> getSignatories()
@@ -58,36 +53,13 @@ public class TemplateDetails
     public boolean isUnilateral()
     {
         //Check that there is one and that it is not a collection type
-        return signatories.size() == 1 && fieldIsPartyType(signatories.get(0));
+        return signatories.size() == 1 && this.fieldsDiffs.fieldIsPartyType(signatories.get(0));
     }
 
     public boolean isBilateral()
     {
-        return signatories.size() == 2 && fieldIsPartyType(signatories.get(0)) && fieldIsPartyType(signatories.get(1));
-    }
-
-    private boolean hasUpgradableFields()
-    {
-        //todo - handle complex record types and generics are also not complex
-        return this.fields.values().stream().allMatch(type -> {
-            if(type.hasInterned())
-            {
-                type = _package.getInternedTypes(type.getInterned());
-            }
-            if(type.hasPrim() && type.getPrim().getArgsCount() > 0)
-            {
-                for(DamlLf1.Type argType : type.getPrim().getArgsList())
-                {
-                    if(argType.hasInterned())
-                    {
-                        argType = _package.getInternedTypes(argType.getInterned());
-                        if(!argType.hasPrim() && !argType.hasNat()) //decimal types have natural args
-                            return false;
-                    }
-                }
-            }
-            return type.hasPrim();
-        });
+        return signatories.size() == 2 && this.fieldsDiffs.fieldIsPartyType(signatories.get(0)) &&
+                this.fieldsDiffs.fieldIsPartyType(signatories.get(1));
     }
 
     public UpgradeDecision getUpgradeDecision()
@@ -117,7 +89,7 @@ public class TemplateDetails
         {
             this.upgradeDecision = UpgradeDecision.NO_MULTI_PARTY;
         }
-        else if (!this.hasUpgradableFields())
+        else if (!this.fieldsDiffs.hasUpgradableFields(this._package))
         {
             this.upgradeDecision = UpgradeDecision.NO_NON_PRIMITIVE_TYPES;
         }
@@ -132,28 +104,13 @@ public class TemplateDetails
         }
     }
 
-    private boolean fieldIsPartyType(String fieldName)
-    {
-        DamlLf1.Type type = this.fields.get(fieldName);
-        if(type.hasInterned())
-        {
-            type = _package.getInternedTypes(type.getInterned());
-        }
-        return type.hasPrim() && type.getPrim().getPrim().getValueDescriptor().getName().equals("PARTY");
-    }
-
     public void setDifferenceType(TemplateDifferenceType differenceType)
     {
         this.differenceType = differenceType;
     }
 
-    public void addSchemaData(DamlLf1.DefDataType dataType)
+    public void setFieldsDiffs(FieldsDiffs fieldsDiffs)
     {
-        for(DamlLf1.FieldWithType ft: dataType.getRecord().getFieldsList())
-        {
-            String fieldName = _package.getInternedStrings(ft.getFieldInternedStr());
-            DamlLf1.Type type = ft.getType();
-            this.addField(fieldName,type);
-        }
+        this.fieldsDiffs = fieldsDiffs;
     }
 }
