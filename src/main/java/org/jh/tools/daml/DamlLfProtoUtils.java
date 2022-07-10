@@ -95,8 +95,12 @@ public class DamlLfProtoUtils
         return type;
     }
 
-    public static boolean isOptional(DamlLf1.Type type, DamlLf1.Package _package)
+    public static boolean isOptional(DamlLf1.Type type)
     {
+        if(type.hasPrim())
+        {
+            return "OPTIONAL".equals(type.getPrim().getPrim().getValueDescriptor().getName());
+        }
         return false;
     }
     

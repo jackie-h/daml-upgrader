@@ -121,7 +121,7 @@ public class FieldsDiffs
 
                 fieldsIndex.fields.put(fieldName, type);
 
-                if(DamlLfProtoUtils.isOptional(ft.getType(), _package))
+                if(DamlLfProtoUtils.isOptional(type.type))
                 {
                     fieldsIndex.optionalFields.add(fieldName);
                 }
