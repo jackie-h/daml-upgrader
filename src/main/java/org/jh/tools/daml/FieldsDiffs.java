@@ -79,10 +79,10 @@ public class FieldsDiffs
 
     protected boolean isSchemaUpgradable()
     {
-        return this.fieldsInBothSame() && this.newFields.isEmpty();
+        return this.fieldsInBothSameHaveSameType() && this.newFields.isEmpty();
     }
 
-    private boolean fieldsInBothSame()
+    private boolean fieldsInBothSameHaveSameType()
     {
 
         for(String fieldName : this.fieldsInBoth)
@@ -108,28 +108,41 @@ public class FieldsDiffs
             for(DamlLf1.FieldWithType ft: fields.getFieldsList())
             {
                 String fieldName = _package.getInternedStrings(ft.getFieldInternedStr());
-                Type type = new Type();
-                type.type = DamlLfProtoUtils.resolveType(ft.getType(), _package);
+                Type type = getType(ft.getType(), _package);
+                if(type.type.hasPrim())
+                {
+                    if(DamlLfProtoUtils.isOptional(type.type))
+                    {
+                        fieldsIndex.optionalFields.add(fieldName);
+                    }
 
-                StringBuilder builder = new StringBuilder();
-                DamlLfPrinter.print(builder, "", ft.getType(), _package);
-                type.typeAsString = builder.toString();
+                    for(DamlLf1.Type argType : type.type.getPrim().getArgsList())
+                    {
+                        type.args.add(getType(argType, _package));
+                    }
+                }
 
                 fieldsIndex.fields.put(fieldName, type);
-
-                if(DamlLfProtoUtils.isOptional(type.type))
-                {
-                    fieldsIndex.optionalFields.add(fieldName);
-                }
             }
             return fieldsIndex;
+        }
+
+        private static Type getType(DamlLf1.Type lf_type, DamlLf1.Package _package)
+        {
+            Type type = new Type();
+            type.type = DamlLfProtoUtils.resolveType(lf_type, _package);
+
+            StringBuilder builder = new StringBuilder();
+            DamlLfPrinter.print(builder, "", lf_type, _package);
+            type.typeAsString = builder.toString();
+            return type;
         }
 
         private static class Type
         {
             private DamlLf1.Type type;
             private String typeAsString;
-            private List<DamlLf1.Type> args;
+            private List<Type> args = new ArrayList<>();
         }
     }
 
