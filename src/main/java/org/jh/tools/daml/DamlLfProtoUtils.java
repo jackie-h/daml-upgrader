@@ -2,8 +2,6 @@ package org.jh.tools.daml;
 
 import com.daml.daml_lf_dev.DamlLf;
 import com.daml.daml_lf_dev.DamlLf1;
-import com.daml.lf.archive.ArchivePayload;
-import com.daml.lf.archive.Reader;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -47,7 +45,7 @@ public class DamlLfProtoUtils
                         );
                         templateDetails.setFieldsDiffs(fieldsDiffs);
 
-                        if(isSchemaSame(templateWithData.dataType, one.getDamlLf1(), template2.dataType, two.getDamlLf1()))
+                        if(fieldsDiffs.isSchemaSame())
                         {
                             templateDetails.setDifferenceType(TemplateDifferenceType.IN_BOTH_CONTENTS_ONLY_CHANGE);
                         }
@@ -101,49 +99,6 @@ public class DamlLfProtoUtils
     {
         return false;
     }
-
-    public static boolean isSchemaSame(DamlLf1.DefDataType dataTypeOne, DamlLf1.Package _packageOne,
-                                       DamlLf1.DefDataType dataTypeTwo, DamlLf1.Package _packageTwo)
-    {
-        if(dataTypeOne.getRecord().getFieldsList().size() != dataTypeTwo.getRecord().getFieldsList().size())
-        {
-            return false;
-        }
-        else
-        {
-            Map<String,String> fieldsOne = getFieldNamesAndTypes(dataTypeOne, _packageOne);
-            Map<String,String> fieldsTwo = getFieldNamesAndTypes(dataTypeTwo, _packageTwo);
-
-            for(String fieldName : fieldsOne.keySet())
-            {
-                String type1 = fieldsOne.get(fieldName);
-                String type2 = fieldsTwo.get(fieldName);
-                if(type2 == null)
-                {
-                    return false;
-                }
-                if(!type1.equals(type2))
-                {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-    public static Map<String,String> getFieldNamesAndTypes(DamlLf1.DefDataType dataType, DamlLf1.Package _package)
-    {
-        Map<String,String> fieldMap = new HashMap<>();
-        for(DamlLf1.FieldWithType ft: dataType.getRecord().getFieldsList())
-        {
-            String fieldName = _package.getInternedStrings(ft.getFieldInternedStr());
-            StringBuilder builder = new StringBuilder();
-            DamlLfPrinter.print(builder, "", ft.getType(), _package);
-            fieldMap.put(fieldName,builder.toString());
-        }
-        return fieldMap;
-    }
     
     public static Map<String,Map<String,List<String>>> findSignatories(DamlLf.ArchivePayload payload)
     {
@@ -190,44 +145,6 @@ public class DamlLfProtoUtils
         return templateSignatories;
     }
 
-    public static Map<String,List<String>> findTemplatesThatAreInOneButDifferentInTwo(DamlLf.ArchivePayload one, DamlLf.ArchivePayload two)
-    {
-        Map<String,List<String>> moduleTemplatesChanged = new HashMap<>();
-
-        Map<String, Map<String, TemplateWithData>> moduleTemplatesOne = collectTemplates(one.getDamlLf1());
-        Map<String, Map<String, TemplateWithData>> moduleTemplatesTwo = collectTemplates(two.getDamlLf1());
-
-        for(String moduleName: moduleTemplatesOne.keySet())
-        {
-            Map<String, TemplateWithData> templatesOne = moduleTemplatesOne.get(moduleName);
-            Map<String, TemplateWithData> templatesTwo = moduleTemplatesTwo.get(moduleName);
-            List<String> changed = new ArrayList<>();
-
-            if (templatesTwo != null)
-            {
-                for (String templateName : templatesOne.keySet())
-                {
-                    TemplateWithData template1 = templatesOne.get(templateName);
-                    TemplateWithData template2 = templatesTwo.get(templateName);
-
-                    if (template2 != null)
-                    {
-                        if (!templatesEqualIgnoreLocation(template1.template, template2.template))
-                        {
-                            changed.add(templateName);
-                        }
-                    }
-                }
-            }
-            if(!changed.isEmpty())
-            {
-                moduleTemplatesChanged.put(moduleName, changed);
-            }
-        }
-
-        return moduleTemplatesChanged;
-    }
-
     private static Map<String,Map<String, TemplateWithData>> collectTemplates(DamlLf1.Package _package)
     {
         Map<String,Map<String, TemplateWithData>> moduleTemplates = new HashMap<>();
@@ -261,30 +178,6 @@ public class DamlLfProtoUtils
             names.add(_package.getInternedStrings(segment));
         }
         return String.join(".", names);
-    }
-
-    private static boolean templatesEqualIgnoreLocation(DamlLf1.DefTemplate one, DamlLf1.DefTemplate two)
-    {
-        //Check if the templates are the same, ignore the location in the file which could be different
-        return one.getAgreement().equals(two.getAgreement())
-                && listsEqual(one.getChoicesList(), two.getChoicesList())
-                && one.getSignatories().equals(two.getSignatories());
-    }
-
-    private static boolean listsEqual(List<?> one, List<?> two)
-    {
-        if(one.size() != two.size())
-        {
-            return false;
-        }
-
-        for(Object o: one)
-        {
-            if(Collections.frequency(one, o) != Collections.frequency(two, o))
-                return false;
-        }
-
-        return true;
     }
 
     private static class TemplateWithData

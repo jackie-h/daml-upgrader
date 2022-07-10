@@ -72,6 +72,35 @@ public class FieldsDiffs
         });
     }
 
+    protected boolean isSchemaSame()
+    {
+        if(this.fieldsIndex1.fields.keySet().size() != this.fieldsIndex2.fields.keySet().size())
+        {
+            return false;
+        }
+        else
+        {
+            Map<String, FieldsIndex.Type> fieldsOne = this.fieldsIndex1.fields;
+            Map<String, FieldsIndex.Type> fieldsTwo = this.fieldsIndex2.fields;
+
+            for(String fieldName : fieldsOne.keySet())
+            {
+                FieldsIndex.Type type1 = fieldsOne.get(fieldName);
+                FieldsIndex.Type type2 = fieldsTwo.get(fieldName);
+                if(type2 == null)
+                {
+                    return false;
+                }
+                if(!type1.typeAsString.equals(type2.typeAsString))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     private static class FieldsIndex
     {
         private final Map<String,Type> fields = new LinkedHashMap<>();
@@ -85,6 +114,11 @@ public class FieldsDiffs
                 String fieldName = _package.getInternedStrings(ft.getFieldInternedStr());
                 Type type = new Type();
                 type.type = DamlLfProtoUtils.resolveType(ft.getType(), _package);
+
+                StringBuilder builder = new StringBuilder();
+                DamlLfPrinter.print(builder, "", ft.getType(), _package);
+                type.typeAsString = builder.toString();
+
                 fieldsIndex.fields.put(fieldName, type);
 
                 if(DamlLfProtoUtils.isOptional(ft.getType(), _package))
@@ -98,6 +132,7 @@ public class FieldsDiffs
         private static class Type
         {
             private DamlLf1.Type type;
+            private String typeAsString;
             private List<DamlLf1.Type> args;
         }
     }
