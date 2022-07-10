@@ -90,6 +90,11 @@ public class TemplateDetails
         });
     }
 
+    public UpgradeDecision getUpgradeDecision()
+    {
+        return upgradeDecision;
+    }
+
     public boolean canAutoUpgrade()
     {
         if (this.upgradeDecision == null)

@@ -34,6 +34,7 @@ public class Upgrader
         List<TemplateDetails> details = upgradeTemplateNamesByModule.values().stream().flatMap(stringTemplateDetailsMap -> stringTemplateDetailsMap.values().stream())
                 .collect(Collectors.toList());
         LOGGER.info(String.format("Created upgrades for %d/%d contracts", details.stream().filter(TemplateDetails::canAutoUpgrade).count(), details.size()));
+        LOGGER.info(report(upgradeTemplateNamesByModule));
         return upgradeTemplateNamesByModule;
     }
 
@@ -127,6 +128,28 @@ public class Upgrader
             e.printStackTrace();
             throw new RuntimeException("Failed to create upgrade module:" + moduleName);
         }
+    }
+
+    public static String report(Map<String, Map<String, TemplateDetails>> results)
+    {
+        StringBuilder builder = new StringBuilder();
+        String spacer = "-".repeat(140);
+        String rowFormat = "| %-30s | %-30s | %-70s |\n";
+        builder.append("\n").append(spacer).append("\n");
+        builder.append(String.format(rowFormat, "Module", "Template", "Result"));
+        builder.append(spacer).append("\n");
+        for(String module: results.keySet())
+        {
+            Map<String, TemplateDetails> templates = results.get(module);
+
+            for(String template : templates.keySet())
+            {
+                TemplateDetails details = templates.get(template);
+                builder.append(String.format(rowFormat, module, template, details.getUpgradeDecision().getMessage()));
+            }
+        }
+        builder.append(spacer).append("\n");
+        return builder.toString();
     }
 
 }
