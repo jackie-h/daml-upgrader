@@ -25,7 +25,7 @@ public class UpgraderTest
     @Test
     public void testScenario1() throws IOException
     {
-        Upgrader.createUpgrades("daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar",
+        Map<String, Map<String, TemplateDetails>> moduleTemplates = Upgrader.createUpgrades("daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar",
                 "daml-examples/scenario1/v2/.daml/dist/carbon-2.0.0.dar",
                 "target/scenario1", "../../daml-examples/data/v1/.daml/dist/finance-1.0.0.dar");
 
@@ -48,6 +48,30 @@ public class UpgraderTest
                         "Intro.SchemaChanges.UpgradeSame[UpgradeSameAgreement]\n" +
                         "Intro.SchemaChanges.UpgradeSame[UpgradeSameProposal]",
                 String.join("\n", templates));
+
+        Assert.assertEquals("-------------------------------------------------------------------------------------------------------------------------\n" +
+                "| Module               | Template              | Result                                                                 |\n" +
+                "-------------------------------------------------------------------------------------------------------------------------\n" +
+                "| Intro.SchemaWithData | ContractWithDataDep   | Template has non-primitive types and those are currently not supported |\n" +
+                "| Intro.SchemaWithData | ContractWithDataList  | Template has non-primitive types and those are currently not supported |\n" +
+                "| Intro.SchemaWithData | ContractWithData      | Template has non-primitive types and those are currently not supported |\n" +
+                "| Intro.MultiParty     | Agreement             | Don't know how to upgrade contracts with >2 parties yet                |\n" +
+                "| Intro.MultiParty     | Pending               | Don't know how to upgrade contracts with >2 parties yet                |\n" +
+                "| Intro.SchemaChanges  | FieldBecomesMandatory | Template schema changed in a way that is not auto-upgradable           |\n" +
+                "| Intro.SchemaChanges  | Same                  | Ok!                                                                    |\n" +
+                "| Intro.SchemaChanges  | AddField              | Template schema changed in a way that is not auto-upgradable           |\n" +
+                "| Intro.SchemaChanges  | FieldTypeChange       | Template schema changed in a way that is not auto-upgradable           |\n" +
+                "| Intro.SchemaChanges  | AddOptionalField      | Template schema changed in a way that is not auto-upgradable           |\n" +
+                "| Intro.SchemaChanges  | RemoveField           | Template schema changed in a way that is not auto-upgradable           |\n" +
+                "| Intro.SchemaChanges  | FieldBecomesOptional  | Template schema changed in a way that is not auto-upgradable           |\n" +
+                "| Intro.SchemaChanges  | FieldNameChange       | Template schema changed in a way that is not auto-upgradable           |\n" +
+                "| Intro.SchemaChanges  | ReorderField          | Ok!                                                                    |\n" +
+                "| Carbon               | CarbonCertProposal    | Ok!                                                                    |\n" +
+                "| Carbon               | CarbonCert            | Ok!                                                                    |\n" +
+                "| Intro.Invite         | Invitation            | Ok!                                                                    |\n" +
+                "| Intro.Iou            | Iou                   | Ok!                                                                    |\n" +
+                "-------------------------------------------------------------------------------------------------------------------------\n",
+                Upgrader.report(moduleTemplates));
     }
 
     @Test
