@@ -64,7 +64,7 @@ public class Dar
                 }
                 else if (itemName.endsWith(".conf"))
                 {
-                    conf = new Manifest(is);
+                    //conf = new Manifest(is);
                 }
                 else if (itemName.endsWith(".daml"))
                 {

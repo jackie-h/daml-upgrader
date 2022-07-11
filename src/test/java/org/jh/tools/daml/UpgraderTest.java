@@ -41,7 +41,7 @@ public class UpgraderTest
                         "| Intro.SchemaChanges  | Same                  | Ok!                                                                    |\n" +
                         "| Intro.SchemaChanges  | AddField              | Template schema changed in a way that is not auto-upgradable           |\n" +
                         "| Intro.SchemaChanges  | FieldTypeChange       | Template schema changed in a way that is not auto-upgradable           |\n" +
-                        "| Intro.SchemaChanges  | AddOptionalField      | Template schema changed in a way that is not auto-upgradable           |\n" +
+                        "| Intro.SchemaChanges  | AddOptionalField      | Ok!                                                                    |\n" +
                         "| Intro.SchemaChanges  | RemoveField           | Ok!                                                                    |\n" +
                         "| Intro.SchemaChanges  | FieldBecomesOptional  | Template schema changed in a way that is not auto-upgradable           |\n" +
                         "| Intro.SchemaChanges  | FieldNameChange       | Template schema changed in a way that is not auto-upgradable           |\n" +
@@ -59,7 +59,7 @@ public class UpgraderTest
         ArchivePayload result = Reader.readArchive(output.getDamlLf()).right().get();
         List<String> templates = DamlLfProtoUtils.collectTemplateNames(result.proto());
 
-        Assert.assertEquals(13, templates.size());
+        Assert.assertEquals(15, templates.size());
         Assert.assertEquals("Carbon.UpgradeCarbonCertProposal[UpgradeCarbonCertProposalAgreement]\n" +
                         "Carbon.UpgradeCarbonCert[UpgradeCarbonCertAgreement]\n" +
                         "Carbon.UpgradeCarbonCert[UpgradeCarbonCertProposal]\n" +
@@ -67,6 +67,8 @@ public class UpgraderTest
                         "Intro.Invite.UpgradeInvitation[UpgradeInvitationProposal]\n" +
                         "Intro.Iou.UpgradeIou[UpgradeIouAgreement]\n" +
                         "Intro.Iou.UpgradeIou[UpgradeIouProposal]\n" +
+                        "Intro.SchemaChanges.UpgradeAddOptionalField[UpgradeAddOptionalFieldAgreement]\n" +
+                        "Intro.SchemaChanges.UpgradeAddOptionalField[UpgradeAddOptionalFieldProposal]\n" +
                         "Intro.SchemaChanges.UpgradeRemoveField[UpgradeRemoveFieldAgreement]\n" +
                         "Intro.SchemaChanges.UpgradeRemoveField[UpgradeRemoveFieldProposal]\n" +
                         "Intro.SchemaChanges.UpgradeReorderField[UpgradeReorderFieldAgreement]\n" +

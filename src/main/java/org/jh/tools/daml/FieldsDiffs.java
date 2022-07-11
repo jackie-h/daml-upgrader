@@ -8,12 +8,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class FieldsDiffs
 {
-    private List<String> newFields = new ArrayList<>();
-    private List<String> removedFields = new ArrayList<>();
-    private List<String> fieldsInBoth = new ArrayList<>();
+    private final List<String> newFields = new ArrayList<>();
+    private final List<String> removedFields = new ArrayList<>();
+    private final List<String> fieldsInBoth = new ArrayList<>();
 
     private FieldsIndex fieldsIndexFrom;
     private FieldsIndex fieldsIndexTo;
@@ -46,9 +47,14 @@ public class FieldsDiffs
         return diffs;
     }
 
-    public Iterable<String> getFieldNames()
+    public Iterable<String> getFieldNamesInBoth()
     {
-        return this.fieldsIndexTo.fields.keySet();
+        return this.fieldsInBoth;
+    }
+
+    public Iterable<String> getAdditionalOptionalFields()
+    {
+        return this.newFields.stream().filter(s -> fieldsIndexTo.fields.get(s).isOptional()).collect(Collectors.toList());
     }
 
     protected boolean fieldIsPartyType(String fieldName)
@@ -79,7 +85,10 @@ public class FieldsDiffs
 
     protected boolean isSchemaUpgradable()
     {
-        return this.fieldsInBothSameHaveSameType() && this.newFields.isEmpty();
+        return this.fieldsInBothSameHaveSameType() &&
+                //No new fields or all optional fields
+                (this.newFields.isEmpty()
+                        || this.newFields.stream().allMatch(s -> fieldsIndexTo.fields.get(s).isOptional()));
     }
 
     private boolean fieldsInBothSameHaveSameType()
@@ -143,6 +152,11 @@ public class FieldsDiffs
             private DamlLf1.Type type;
             private String typeAsString;
             private List<Type> args = new ArrayList<>();
+
+            boolean isOptional()
+            {
+                return DamlLfProtoUtils.isOptional(type);
+            }
         }
     }
 

@@ -5,7 +5,6 @@ import org.stringtemplate.v4.ST;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 
 public class UpgradeTemplate
 {
@@ -29,7 +28,8 @@ public class UpgradeTemplate
             "         assert (cert.<sig_issuer> == <sig_issuer>)\n" +
             "         archive certId\n" +
             "         create <module_name>V2.<contract_name> with\n" +
-            "<fields:{ field |           <field> = cert.<field>\n }>";
+            "<fields:{ field |           <field> = cert.<field>\n }>" +
+            "<new_optional_fields:{ field |           <field> = None\n }>";
 
     private static final String UPGRADE_TEMPLATE_BILATERAL = "module <module_name>.Upgrade<contract_name> where\n" +
             "\n" +
@@ -66,7 +66,8 @@ public class UpgradeTemplate
             "         assert (cert.<sig_owner> == <sig_owner>)\n" +
             "         archive certId\n" +
             "         create <module_name>V2.<contract_name> with\n" +
-            "<fields:{ field |           <field> = cert.<field>\n }>";
+            "<fields:{ field |           <field> = cert.<field>\n }>" +
+            "<new_optional_fields:{ field |           <field> = None\n }>";
 
     private static final String UPGRADE_INITIATE_SCRIPT = "module <module_name>.Upgrade<contract_name>Initiate where\n" +
             "\n" +
@@ -135,7 +136,8 @@ public class UpgradeTemplate
         ST upgrade = new ST(UPGRADE_TEMPLATE_UNILATERAL);
         upgrade.add("module_name", moduleName);
         upgrade.add("contract_name", templateDetails.name());
-        upgrade.add("fields",templateDetails.getFieldNames());
+        upgrade.add("fields",templateDetails.getFieldNamesInBoth());
+        upgrade.add("new_optional_fields",templateDetails.getAdditionalOptionalFields());
         String issuer = templateDetails.getSignatories().get(0);
         upgrade.add("sig_issuer", issuer);
         return upgrade.render();
@@ -146,7 +148,8 @@ public class UpgradeTemplate
         ST upgrade = new ST(UPGRADE_TEMPLATE_BILATERAL);
         upgrade.add("module_name", moduleName);
         upgrade.add("contract_name", templateDetails.name());
-        upgrade.add("fields",templateDetails.getFieldNames());
+        upgrade.add("fields",templateDetails.getFieldNamesInBoth());
+        upgrade.add("new_optional_fields",templateDetails.getAdditionalOptionalFields());
         //todo - try to identify the actual owner
         String issuer = templateDetails.getSignatories().get(0);
         String owner = templateDetails.getSignatories().get(1);

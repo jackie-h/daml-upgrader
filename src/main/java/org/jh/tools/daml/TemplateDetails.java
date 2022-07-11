@@ -38,9 +38,14 @@ public class TemplateDetails
         return name;
     }
 
-    public Iterable<String> getFieldNames()
+    public Iterable<String> getFieldNamesInBoth()
     {
-        return this.fieldsDiffs.getFieldNames();
+        return this.fieldsDiffs.getFieldNamesInBoth();
+    }
+
+    public Iterable<String> getAdditionalOptionalFields()
+    {
+        return this.fieldsDiffs.getAdditionalOptionalFields();
     }
 
     public List<String> getSignatories()
