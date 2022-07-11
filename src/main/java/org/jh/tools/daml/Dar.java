@@ -20,9 +20,9 @@ public class Dar
     private final Map<String,String> sources;
     private final Map<String,DamlLf.Archive> damlLfArchivesByHash;
     private final Manifest manifest;
-    private final Manifest conf;
+    private final String conf;
 
-    public Dar(String name, Manifest manifest, Manifest conf, Map<String, String> sources, Map<String,DamlLf.Archive> damlLfArchivesByHash)
+    public Dar(String name, Manifest manifest, String conf, Map<String, String> sources, Map<String,DamlLf.Archive> damlLfArchivesByHash)
     {
         this.name = name;
         this.manifest = manifest;
@@ -40,7 +40,7 @@ public class Dar
         Map<String,String> sources = new HashMap<>();
         Map<String,DamlLf.Archive> archives = new HashMap<>();
         Manifest manifest = null;
-        Manifest conf = null;
+        String conf = null;
 
         try(ZipInputStream is = new ZipInputStream(java.nio.file.Files.newInputStream(path)))
         {
@@ -64,7 +64,7 @@ public class Dar
                 }
                 else if (itemName.endsWith(".conf"))
                 {
-                    //conf = new Manifest(is);
+                    conf = new String(is.readAllBytes());
                 }
                 else if (itemName.endsWith(".daml"))
                 {
