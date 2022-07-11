@@ -85,13 +85,13 @@ public class FieldsDiffs
 
     protected boolean isSchemaUpgradable()
     {
-        return this.fieldsInBothSameHaveSameType() &&
+        return this.fieldsInBothHaveSameType() &&
                 //No new fields or all optional fields
                 (this.newFields.isEmpty()
                         || this.newFields.stream().allMatch(s -> fieldsIndexTo.fields.get(s).isOptional()));
     }
 
-    private boolean fieldsInBothSameHaveSameType()
+    private boolean fieldsInBothHaveSameType()
     {
 
         for(String fieldName : this.fieldsInBoth)
