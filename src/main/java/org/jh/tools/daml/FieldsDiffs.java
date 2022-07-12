@@ -58,25 +58,23 @@ public class FieldsDiffs
     protected boolean fieldIsPartyType(String fieldName)
     {
         FieldsIndex.Type type = this.fieldsIndexFrom.fields.get(fieldName);
-        return type.type.hasPrim() && type.type.getPrim().getPrim().getValueDescriptor().getName().equals("PARTY");
+        return type instanceof FieldsIndex.PrimitiveType && ((FieldsIndex.PrimitiveType)type).name.equals("PARTY");
     }
 
     protected boolean hasUpgradableFields(DamlLf1.Package _package)
     {
         //todo - handle complex record types and generics are also not complex
         return this.fieldsIndexFrom.fields.values().stream().allMatch(type -> {
-            if(type.type.hasPrim())
+            if(type instanceof FieldsIndex.PrimitiveType)
             {
-                if(type.type.getPrim().getArgsCount() > 0)
+                FieldsIndex.BaseType baseType = (FieldsIndex.BaseType)type;
+                if(baseType.args.size() > 0)
                 {
-                    for (DamlLf1.Type argType : type.type.getPrim().getArgsList())
+                    for (FieldsIndex.Type argType : baseType.args)
                     {
-                        if (argType.hasInterned())
-                        {
-                            argType = _package.getInternedTypes(argType.getInterned());
-                            if (!argType.hasPrim() && !argType.hasNat()) //decimal types have natural args
+                        if (!(argType instanceof FieldsIndex.PrimitiveType)
+                                && !(argType instanceof FieldsIndex.NatType)) //decimal types have natural args
                                 return false;
-                        }
                     }
                 }
                 return true;
@@ -100,7 +98,7 @@ public class FieldsDiffs
         {
             FieldsIndex.Type type1 = this.fieldsIndexFrom.fields.get(fieldName);
             FieldsIndex.Type type2 = this.fieldsIndexTo.fields.get(fieldName);
-            if(!type1.typeAsString.equals(type2.typeAsString))
+            if(!type1.toString().equals(type2.toString()))
             {
                 return false;
             }
@@ -119,14 +117,6 @@ public class FieldsDiffs
             {
                 String fieldName = _package.getInternedStrings(ft.getFieldInternedStr());
                 Type type = getType(ft.getType(), _package);
-                if(type.type.hasPrim())
-                {
-                    for(DamlLf1.Type argType : type.type.getPrim().getArgsList())
-                    {
-                        type.args.add(getType(argType, _package));
-                    }
-                }
-
                 fieldsIndex.fields.put(fieldName, type);
             }
             return fieldsIndex;
@@ -134,24 +124,127 @@ public class FieldsDiffs
 
         private static Type getType(DamlLf1.Type lf_type, DamlLf1.Package _package)
         {
-            Type type = new Type();
-            type.type = DamlLfProtoUtils.resolveType(lf_type, _package);
+            lf_type = DamlLfProtoUtils.resolveType(lf_type, _package);
+            BaseType type = null;
+            if(lf_type.hasPrim())
+            {
+                PrimitiveType primitiveType = new PrimitiveType();
+                primitiveType.name = lf_type.getPrim().getPrim().getValueDescriptor().getName();
+                type = primitiveType;
 
-            StringBuilder builder = new StringBuilder();
-            DamlLfPrinter.print(builder, "", lf_type, _package);
-            type.typeAsString = builder.toString();
+                for(DamlLf1.Type argType : lf_type.getPrim().getArgsList())
+                {
+                    type.args.add(getType(argType, _package));
+                }
+            }
+            else if(lf_type.hasNat())
+            {
+                NatType nt = new NatType();
+                nt.value = lf_type.getNat();
+                type = nt;
+            }
+            else if(lf_type.hasCon())
+            {
+                DamlLf1.Type.Con tCon = lf_type.getCon();
+                if(tCon.hasTycon())
+                {
+                    DamlLf1.TypeConName typeConName = tCon.getTycon();
+                    if(typeConName.hasModule())
+                    {
+                        DamlLf1.ModuleRef ref = typeConName.getModule();
+                        if(ref.hasModuleNameInternedDname())
+                        {
+                            String moduleName = DamlLfProtoUtils.getName(_package, ref.getModuleNameInternedDname());
+                            String name = DamlLfProtoUtils.getName(_package, typeConName.getNameInternedDname());
+                            DataTypeRef dtr = new DataTypeRef();
+                            dtr.moduleName = moduleName;
+                            dtr.name = name;
+                            type = dtr;
+                        }
+                    }
+                }
+            }
+
+            if (type == null)
+            {
+                UnknownType ut = new UnknownType();
+                ut.type = lf_type;
+                StringBuilder builder = new StringBuilder();
+                DamlLfPrinter.print(builder, "", lf_type, _package);
+                ut.typeAsString = builder.toString();
+                type = ut;
+            }
+
             return type;
         }
 
-        private static class Type
+        private interface Type
+        {
+            boolean isOptional();
+
+        }
+
+        private static class BaseType implements Type
+        {
+            private List<Type> args = new ArrayList<>();
+
+            @Override
+            public boolean isOptional()
+            {
+                return false;
+            }
+
+            public String toString()
+            {
+                return args.stream().map(String::valueOf).collect(Collectors.joining(",", "<", ">"));
+            }
+        }
+
+        private static class PrimitiveType extends BaseType
+        {
+            String name;
+
+            @Override
+            public boolean isOptional()
+            {
+                return "OPTIONAL".equals(name);
+            }
+
+            public String toString()
+            {
+                return this.name + super.toString();
+            }
+        }
+
+        private static class NatType extends BaseType
+        {
+            long value;
+
+            public String toString()
+            {
+                return this.value + super.toString();
+            }
+        }
+
+        private static class DataTypeRef extends BaseType
+        {
+            String moduleName;
+            String name;
+
+            public String toString()
+            {
+                return this.moduleName + "[" + this.name + "]";
+            }
+        }
+
+        private static class UnknownType extends BaseType
         {
             private DamlLf1.Type type;
             private String typeAsString;
-            private List<Type> args = new ArrayList<>();
 
-            boolean isOptional()
+            public String toString()
             {
-                return DamlLfProtoUtils.isOptional(type);
+                return this.typeAsString + super.toString();
             }
         }
     }
