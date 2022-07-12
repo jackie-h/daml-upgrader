@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 public class ArchiveDiffs
 {
     private final Map<String, Map<String,TemplateDetails>> moduleTemplates = new HashMap<>();
+    private final Map<String, Map<String,FieldsDiffs>> moduleDataTypes = new HashMap<>();
 
     public Set<String> modules()
     {
@@ -50,16 +51,17 @@ public class ArchiveDiffs
 
         for(String moduleName: moduleTemplatesOne.keySet())
         {
-            ModuleIndex templatesOne = moduleTemplatesOne.get(moduleName);
-            ModuleIndex templatesTwo = moduleTemplatesTwo.get(moduleName);
+            ModuleIndex moduleIndexOne = moduleTemplatesOne.get(moduleName);
+            ModuleIndex moduleIndexTwo = moduleTemplatesTwo.get(moduleName);
             Map<String, TemplateDetails> templates = new HashMap<>();
+            Map<String, FieldsDiffs> dataTypes = new HashMap<>();
 
-            if (templatesTwo != null)
+            if (moduleIndexTwo != null)
             {
-                for (String templateName : templatesOne.templateNames)
+                for (String templateName : moduleIndexOne.templateNames)
                 {
                     TemplateDetails templateDetails = new TemplateDetails(templateName, archiveFrom.getDamlLf1());
-                    if (templatesTwo.templateNames.contains(templateName))
+                    if (moduleIndexTwo.templateNames.contains(templateName))
                     {
 
                         List<String> signatories = signatoriesMap.getOrDefault(moduleName, new HashMap<>())
@@ -67,8 +69,8 @@ public class ArchiveDiffs
 
                         templateDetails.setSignatories(signatories);
 
-                        DamlLf1.DefDataType dataType1 = templatesOne.dataTypes.get(templateName);
-                        DamlLf1.DefDataType dataType2 = templatesTwo.dataTypes.get(templateName);
+                        DamlLf1.DefDataType dataType1 = moduleIndexOne.dataTypes.get(templateName);
+                        DamlLf1.DefDataType dataType2 = moduleIndexTwo.dataTypes.get(templateName);
                         FieldsDiffs fieldsDiffs = FieldsDiffs.create(
                                 dataType1.getRecord(), archiveFrom.getDamlLf1(),
                                 dataType2.getRecord(), archiveTo.getDamlLf1()
@@ -81,8 +83,25 @@ public class ArchiveDiffs
                     }
                     templates.put(templateName, templateDetails);
                 }
+
+                for(String dataTypeName : moduleIndexOne.dataTypes.keySet())
+                {
+                    DamlLf1.DefDataType dataType1 = moduleIndexOne.dataTypes.get(dataTypeName);
+                    DamlLf1.DefDataType dataType2 = moduleIndexTwo.dataTypes.get(dataTypeName);
+                    FieldsDiffs fieldsDiffs = new FieldsDiffs();
+
+                    if(dataType2 != null)
+                    {
+                        fieldsDiffs = FieldsDiffs.create(
+                                dataType1.getRecord(), archiveFrom.getDamlLf1(),
+                                dataType2.getRecord(), archiveTo.getDamlLf1()
+                        );
+                    }
+                    dataTypes.put(dataTypeName, fieldsDiffs);
+                }
             }
             archiveDiffs.moduleTemplates.put(moduleName, templates);
+            archiveDiffs.moduleDataTypes.put(moduleName, dataTypes);
         }
         return archiveDiffs;
     }
