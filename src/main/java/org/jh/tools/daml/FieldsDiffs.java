@@ -65,19 +65,23 @@ public class FieldsDiffs
     {
         //todo - handle complex record types and generics are also not complex
         return this.fieldsIndexFrom.fields.values().stream().allMatch(type -> {
-            if(type.type.hasPrim() && type.type.getPrim().getArgsCount() > 0)
+            if(type.type.hasPrim())
             {
-                for(DamlLf1.Type argType : type.type.getPrim().getArgsList())
+                if(type.type.getPrim().getArgsCount() > 0)
                 {
-                    if(argType.hasInterned())
+                    for (DamlLf1.Type argType : type.type.getPrim().getArgsList())
                     {
-                        argType = _package.getInternedTypes(argType.getInterned());
-                        if(!argType.hasPrim() && !argType.hasNat()) //decimal types have natural args
-                            return false;
+                        if (argType.hasInterned())
+                        {
+                            argType = _package.getInternedTypes(argType.getInterned());
+                            if (!argType.hasPrim() && !argType.hasNat()) //decimal types have natural args
+                                return false;
+                        }
                     }
                 }
+                return true;
             }
-            return type.type.hasPrim();
+            return false;
         });
     }
 
