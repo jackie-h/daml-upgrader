@@ -12,13 +12,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 public class Upgrader
 {
     private static final Logger LOGGER = Logger.getLogger(Upgrader.class.getName());
 
-    public static Map<String, Map<String, TemplateDetails>> createUpgrades(String archivePathFrom, String archivePathTo,
+    public static ArchiveDiffs createUpgrades(String archivePathFrom, String archivePathTo,
                                                                            String outputPath, String dataDependencies)
     {
         LOGGER.info("Starting upgrade");
@@ -28,18 +27,15 @@ public class Upgrader
         Dar darFrom = Dar.readDar(archivePathFrom);
         Dar darTo = Dar.readDar(archivePathTo);
 
-        Map<String, Map<String, TemplateDetails>> upgradeTemplateNamesByModule = identifyTemplatesToUpgrade(darFrom.getDamlLf(), darTo.getDamlLf());
-        Map<String, List<Module>> upgrades = createUpgradeTemplates(upgradeTemplateNamesByModule);
+        ArchiveDiffs archiveDiffs = identifyTemplatesToUpgrade(darFrom.getDamlLf(), darTo.getDamlLf());
+        Map<String, List<Module>> upgrades = createUpgradeTemplates(archiveDiffs);
         writeUpgradesToFiles(upgrades, outputPath, darTo.getSdkVersion(), archivePathFrom, archivePathTo, dataDependencies);
-        List<TemplateDetails> details = upgradeTemplateNamesByModule.values().stream().flatMap(stringTemplateDetailsMap -> stringTemplateDetailsMap.values().stream())
-                .collect(Collectors.toList());
-        LOGGER.info(String.format("Created upgrades for %d/%d contracts", details.stream().filter(TemplateDetails::canAutoUpgrade).count(), details.size()));
-        LOGGER.info("\n" + report(upgradeTemplateNamesByModule));
-        return upgradeTemplateNamesByModule;
+        LOGGER.info(String.format("Created upgrades for %d/%d contracts", archiveDiffs.upgradableTemplateCount(), archiveDiffs.templateCount()));
+        LOGGER.info("\n" + archiveDiffs.report());
+        return archiveDiffs;
     }
 
-    private static Map<String, Map<String, TemplateDetails>> identifyTemplatesToUpgrade(DamlLf.Archive archiveFrom,
-                                                                                        DamlLf.Archive archiveTo)
+    private static ArchiveDiffs identifyTemplatesToUpgrade(DamlLf.Archive archiveFrom, DamlLf.Archive archiveTo)
     {
         LOGGER.info(archiveFrom.getHash());
         LOGGER.info(archiveTo.getHash());
@@ -47,7 +43,7 @@ public class Upgrader
         if (archiveFrom.getHash().equals(archiveTo.getHash()))
         {
             LOGGER.info("Contents identical nothing to do");
-            return new HashMap<>();
+            return new ArchiveDiffs();
         }
 
         ArchivePayload payloadCurrent = Reader.readArchive(archiveFrom).right().get();
@@ -55,18 +51,15 @@ public class Upgrader
         LOGGER.info(payloadCurrent.pkgId());
         LOGGER.info(payloadNew.pkgId());
 
-        return DamlLfProtoUtils.findTemplatesThatAreInOneAndInTwo(payloadCurrent.proto(), payloadNew.proto());
+        return ArchiveDiffs.create(payloadCurrent.proto(), payloadNew.proto());
     }
 
-    private static Map<String, List<Module>> createUpgradeTemplates(Map<String, Map<String, TemplateDetails>> upgrades)
+    private static Map<String, List<Module>> createUpgradeTemplates(ArchiveDiffs archiveDiffs)
     {
         Map<String, List<Module>> upgradesByModule = new HashMap<>();
-        for (String moduleName : upgrades.keySet())
+        for (String moduleName : archiveDiffs.modules())
         {
-            Map<String, TemplateDetails> templates = upgrades.get(moduleName);
-            List<TemplateDetails> upgradeable = templates.values().stream()
-                    .filter(TemplateDetails::canAutoUpgrade)
-                    .collect(Collectors.toList());
+            List<TemplateDetails> upgradeable = archiveDiffs.upgradableTemplates(moduleName);
 
             List<Module> contracts = UpgradeTemplate.createUpgradeTemplatesContent(moduleName, upgradeable);
             upgradesByModule.put(moduleName, contracts);
@@ -130,43 +123,4 @@ public class Upgrader
         }
     }
 
-    public static String report(Map<String, Map<String, TemplateDetails>> results)
-    {
-        int[] maxLengths = maxLengths(results);
-        StringBuilder builder = new StringBuilder();
-        String spacer = "-".repeat(maxLengths[0] + maxLengths[1] + maxLengths[2] + 10);
-        String rowFormat = "| %-" + maxLengths[0] + "s | %-" + maxLengths[1] + "s | %-" + maxLengths[2] + "s |\n";
-        builder.append(spacer).append("\n");
-        builder.append(String.format(rowFormat, "Module", "Template", "Result"));
-        builder.append(spacer).append("\n");
-        for (String module : results.keySet())
-        {
-            Map<String, TemplateDetails> templates = results.get(module);
-
-            for (String template : templates.keySet())
-            {
-                TemplateDetails details = templates.get(template);
-                builder.append(String.format(rowFormat, module, template, details.getUpgradeDecision().getMessage()));
-            }
-        }
-        builder.append(spacer).append("\n");
-        return builder.toString();
-    }
-
-    private static int[] maxLengths(Map<String, Map<String, TemplateDetails>> rows)
-    {
-        int[] maxLengths = new int[3];
-        for (String key : rows.keySet())
-        {
-            maxLengths[0] = Math.max(maxLengths[0], key.length());
-            Map<String, TemplateDetails> templates = rows.get(key);
-            for(String templateName: templates.keySet())
-            {
-                TemplateDetails details = templates.get(templateName);
-                maxLengths[1] = Math.max(maxLengths[1], templateName.length());
-                maxLengths[2] = Math.max(maxLengths[2], details.getUpgradeDecision().getMessage().length());
-            }
-        }
-        return maxLengths;
-    }
 }

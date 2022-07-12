@@ -8,7 +8,6 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 public class UpgraderTest
 {
@@ -25,7 +24,7 @@ public class UpgraderTest
     @Test
     public void testScenario1() throws IOException
     {
-        Map<String, Map<String, TemplateDetails>> moduleTemplates = Upgrader.createUpgrades("daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar",
+        ArchiveDiffs archiveDiffs = Upgrader.createUpgrades("daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar",
                 "daml-examples/scenario1/v2/.daml/dist/carbon-2.0.0.dar",
                 "target/scenario1", "../../daml-examples/data/v1/.daml/dist/finance-1.0.0.dar");
 
@@ -51,7 +50,7 @@ public class UpgraderTest
                         "| Intro.Invite         | Invitation            | Ok!                                                                    |\n" +
                         "| Intro.Iou            | Iou                   | Ok!                                                                    |\n" +
                         "-------------------------------------------------------------------------------------------------------------------------\n",
-                Upgrader.report(moduleTemplates));
+                archiveDiffs.report());
 
         DamlCommand.cleanBuildDar("target/scenario1");
 
@@ -81,11 +80,11 @@ public class UpgraderTest
     @Test
     public void testSameDarFileProducesNoChange()
     {
-        Map<String, Map<String, TemplateDetails>> result = Upgrader.createUpgrades("daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar",
+        ArchiveDiffs result = Upgrader.createUpgrades("daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar",
                 "daml-examples/scenario1/v1/.daml/dist/carbon-1.0.0.dar",
                 "target", null);
 
-        Assert.assertEquals(0, result.size());
+        Assert.assertEquals(0, result.templateCount());
     }
 
     @Test
@@ -98,8 +97,8 @@ public class UpgraderTest
         Assert.assertEquals("Files with same contents should have the same hash",
                 dar1.getDamlLf().getHash(), dar2.getDamlLf().getHash());
 
-        Map<String, Map<String, TemplateDetails>> result = Upgrader.createUpgrades(darPath1, darPath2, "target", null);
+        ArchiveDiffs result = Upgrader.createUpgrades(darPath1, darPath2, "target", null);
 
-        Assert.assertEquals(0, result.size());
+        Assert.assertEquals(0, result.templateCount());
     }
 }
