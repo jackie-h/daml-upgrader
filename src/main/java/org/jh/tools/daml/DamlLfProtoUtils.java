@@ -6,42 +6,47 @@ import com.daml.daml_lf_dev.DamlLf1;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class DamlLfProtoUtils
 {
-    public static Map<String,Map<String,TemplateDetails>> findTemplatesThatAreInOneAndInTwo(DamlLf.ArchivePayload archiveFrom, DamlLf.ArchivePayload archiveTo)
+    public static Map<String,Map<String,TemplateDetails>> findTemplatesThatAreInOneAndInTwo(DamlLf.ArchivePayload archiveFrom,
+                                                                                            DamlLf.ArchivePayload archiveTo)
     {
         Map<String,Map<String,TemplateDetails>> moduleTemplates = new HashMap<>();
 
-        Map<String, Map<String, TemplateWithData>> moduleTemplatesOne = collectTemplates(archiveFrom.getDamlLf1());
-        Map<String, Map<String, TemplateWithData>> moduleTemplatesTwo = collectTemplates(archiveTo.getDamlLf1());
+        Map<String, ModuleIndex> moduleTemplatesOne = collectTemplates(archiveFrom.getDamlLf1());
+        Map<String, ModuleIndex> moduleTemplatesTwo = collectTemplates(archiveTo.getDamlLf1());
 
         Map<String,Map<String,List<String>>> signatoriesMap = findSignatories(archiveFrom);
 
         for(String moduleName: moduleTemplatesOne.keySet())
         {
-            Map<String, TemplateWithData> templatesOne = moduleTemplatesOne.get(moduleName);
-            Map<String, TemplateWithData> templatesTwo = moduleTemplatesTwo.get(moduleName);
+            ModuleIndex templatesOne = moduleTemplatesOne.get(moduleName);
+            ModuleIndex templatesTwo = moduleTemplatesTwo.get(moduleName);
             Map<String, TemplateDetails> templates = new HashMap<>();
 
             if (templatesTwo != null)
             {
-                for (String templateName : templatesOne.keySet())
+                for (String templateName : templatesOne.templateNames)
                 {
                     TemplateDetails templateDetails = new TemplateDetails(templateName, archiveFrom.getDamlLf1());
-                    TemplateWithData template2 = templatesTwo.get(templateName);
-                    if (template2 != null)
+                    if (templatesTwo.templateNames.contains(templateName))
                     {
-                        TemplateWithData templateWithData = templatesOne.get(templateName);
+
                         List<String> signatories = signatoriesMap.getOrDefault(moduleName, new HashMap<>())
                                 .getOrDefault(templateName, new ArrayList<>());
 
                         templateDetails.setSignatories(signatories);
+
+                        DamlLf1.DefDataType dataType1 = templatesOne.dataTypes.get(templateName);
+                        DamlLf1.DefDataType dataType2 = templatesTwo.dataTypes.get(templateName);
                         FieldsDiffs fieldsDiffs = FieldsDiffs.create(
-                                templateWithData.dataType.getRecord(), archiveFrom.getDamlLf1(),
-                                template2.dataType.getRecord(), archiveTo.getDamlLf1()
+                                dataType1.getRecord(), archiveFrom.getDamlLf1(),
+                                dataType2.getRecord(), archiveTo.getDamlLf1()
                         );
                         templateDetails.setFieldsDiffs(fieldsDiffs);
                     }
@@ -140,25 +145,13 @@ public class DamlLfProtoUtils
         return templateSignatories;
     }
 
-    private static Map<String,Map<String, TemplateWithData>> collectTemplates(DamlLf1.Package _package)
+    private static Map<String,ModuleIndex> collectTemplates(DamlLf1.Package _package)
     {
-        Map<String,Map<String, TemplateWithData>> moduleTemplates = new HashMap<>();
+        Map<String,ModuleIndex> moduleTemplates = new HashMap<>();
         for(DamlLf1.Module module: _package.getModulesList())
         {
-            Map<String, DamlLf1.DefDataType> dataTypes = new HashMap<>();
-            for(DamlLf1.DefDataType dataType: module.getDataTypesList())
-            {
-                String name = getName(_package, dataType.getNameInternedDname());
-                dataTypes.put(name,dataType);
-            }
-            Map<String, TemplateWithData> result = new HashMap<>();
-            for(DamlLf1.DefTemplate template: module.getTemplatesList())
-            {
-                String name = getName(_package, template.getTyconInternedDname());
-                result.put(name, new TemplateWithData(dataTypes.get(name), template));
-            }
             String moduleName = getName(_package, module.getNameInternedDname());
-            moduleTemplates.put(moduleName, result);
+            moduleTemplates.put(moduleName, ModuleIndex.create(module,_package));
         }
         return moduleTemplates;
     }
@@ -175,15 +168,26 @@ public class DamlLfProtoUtils
         return String.join(".", names);
     }
 
-    private static class TemplateWithData
+    private static class ModuleIndex
     {
-        private final DamlLf1.DefDataType dataType;
-        private final DamlLf1.DefTemplate template;
+        private final Set<String> templateNames = new HashSet<>();
+        private final Map<String,DamlLf1.DefDataType> dataTypes = new HashMap<>();
 
-        TemplateWithData(DamlLf1.DefDataType dataType, DamlLf1.DefTemplate template)
+        static ModuleIndex create(DamlLf1.Module module, DamlLf1.Package _package)
         {
-            this.dataType = dataType;
-            this.template = template;
+            ModuleIndex moduleIndex = new ModuleIndex();
+            for(DamlLf1.DefTemplate template: module.getTemplatesList())
+            {
+                String name = getName(_package, template.getTyconInternedDname());
+                moduleIndex.templateNames.add(name);
+            }
+            for(DamlLf1.DefDataType dataType: module.getDataTypesList())
+            {
+                String name = getName(_package, dataType.getNameInternedDname());
+                moduleIndex.dataTypes.put(name,dataType);
+            }
+
+            return moduleIndex;
         }
     }
 }
