@@ -3,11 +3,9 @@ package org.jh.tools.daml;
 import com.daml.daml_lf_dev.DamlLf1;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class FieldsDiffs
@@ -109,7 +107,6 @@ public class FieldsDiffs
     private static class FieldsIndex
     {
         private final Map<String,Type> fields = new LinkedHashMap<>();
-        private final Set<String> optionalFields = new HashSet<>();
 
         private static FieldsIndex create(DamlLf1.DefDataType.Fields fields, DamlLf1.Package _package)
         {
@@ -120,11 +117,6 @@ public class FieldsDiffs
                 Type type = getType(ft.getType(), _package);
                 if(type.type.hasPrim())
                 {
-                    if(DamlLfProtoUtils.isOptional(type.type))
-                    {
-                        fieldsIndex.optionalFields.add(fieldName);
-                    }
-
                     for(DamlLf1.Type argType : type.type.getPrim().getArgsList())
                     {
                         type.args.add(getType(argType, _package));
