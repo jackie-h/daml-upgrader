@@ -88,7 +88,7 @@ public class TemplateDetails
         {
             this.upgradeDecision = UpgradeDecision.NO_MULTI_PARTY;
         }
-        else if (!this.fieldsDiffs.hasUpgradableFields(this._package))
+        else if (!this.fieldsDiffs.hasUpgradableFields())
         {
             this.upgradeDecision = UpgradeDecision.NO_NON_PRIMITIVE_TYPES;
         }

@@ -61,26 +61,9 @@ public class FieldsDiffs
         return type instanceof FieldsIndex.PrimitiveType && ((FieldsIndex.PrimitiveType)type).name.equals("PARTY");
     }
 
-    protected boolean hasUpgradableFields(DamlLf1.Package _package)
+    protected boolean hasUpgradableFields()
     {
-        //todo - handle complex record types and generics are also not complex
-        return this.fieldsIndexFrom.fields.values().stream().allMatch(type -> {
-            if(type instanceof FieldsIndex.PrimitiveType)
-            {
-                FieldsIndex.BaseType baseType = (FieldsIndex.BaseType)type;
-                if(baseType.args.size() > 0)
-                {
-                    for (FieldsIndex.Type argType : baseType.args)
-                    {
-                        if (!(argType instanceof FieldsIndex.PrimitiveType)
-                                && !(argType instanceof FieldsIndex.NatType)) //decimal types have natural args
-                                return false;
-                    }
-                }
-                return true;
-            }
-            return false;
-        });
+        return this.fieldsIndexFrom.fields.values().stream().allMatch(FieldsIndex.Type::upgradableType);
     }
 
     protected boolean isSchemaUpgradable()
@@ -182,6 +165,8 @@ public class FieldsDiffs
         {
             boolean isOptional();
 
+            boolean upgradableType();
+
         }
 
         private static class BaseType implements Type
@@ -192,6 +177,12 @@ public class FieldsDiffs
             public boolean isOptional()
             {
                 return false;
+            }
+
+            @Override
+            public boolean upgradableType()
+            {
+                return this.args.stream().allMatch(Type::upgradableType);
             }
 
             public String toString()
@@ -231,6 +222,12 @@ public class FieldsDiffs
             String moduleName;
             String name;
 
+            @Override
+            public boolean upgradableType()
+            {
+                return false;
+            }
+
             public String toString()
             {
                 return this.moduleName + "[" + this.name + "]";
@@ -241,6 +238,12 @@ public class FieldsDiffs
         {
             private DamlLf1.Type type;
             private String typeAsString;
+
+            @Override
+            public boolean upgradableType()
+            {
+                return false;
+            }
 
             public String toString()
             {
