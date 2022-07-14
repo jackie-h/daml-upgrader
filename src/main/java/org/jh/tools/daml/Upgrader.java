@@ -30,8 +30,8 @@ public class Upgrader
         ArchiveDiffs archiveDiffs = identifyTemplatesToUpgrade(darFrom.getDamlLf(), darTo.getDamlLf());
         Map<String, List<Module>> upgrades = createUpgradeTemplates(archiveDiffs);
         writeUpgradesToFiles(upgrades, outputPath, darTo.getSdkVersion(), archivePathFrom, archivePathTo, dataDependencies);
-        LOGGER.info(String.format("Created upgrades for %d/%d contracts", archiveDiffs.upgradableTemplateCount(), archiveDiffs.templateCount()));
-        LOGGER.info("\n" + archiveDiffs.report());
+        LOGGER.info(String.format("\nCreated upgrades for %d/%d contracts\n", archiveDiffs.upgradableTemplateCount(), archiveDiffs.templateCount())
+                + archiveDiffs.report());
         return archiveDiffs;
     }
 
