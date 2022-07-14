@@ -6,9 +6,11 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.jar.Manifest;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -35,7 +37,6 @@ public class Dar
     {
         Path path = Paths.get(filePath);
         String darName = path.getFileName().toString();
-        String darNameWithoutExtension = darName.replace(".dar", "");
         DamlLf.Archive archiveProto = null;
         Map<String,String> sources = new HashMap<>();
         Map<String,DamlLf.Archive> archives = new HashMap<>();
@@ -44,7 +45,6 @@ public class Dar
 
         try(ZipInputStream is = new ZipInputStream(java.nio.file.Files.newInputStream(path)))
         {
-
             ZipEntry entry;
             while((entry = is.getNextEntry()) != null)
             {
@@ -54,12 +54,11 @@ public class Dar
                 Path zipContentPath = Paths.get(name);
                 String itemName = zipContentPath.getFileName().toString();
 
-                //Read the DALF file for this code, be careful not to read the dependencies
-                if (itemName.startsWith(darNameWithoutExtension) && itemName.endsWith(".dalf"))
+                if (itemName.endsWith(".dalf"))
                 {
                     byte[] bytes = is.readAllBytes();
                     archiveProto = DamlLf.Archive.parseFrom(bytes);
-                    archives.put(archiveProto.getHash(), archiveProto);
+                    archives.put(itemName, archiveProto);
                     LOGGER.fine(archiveProto.getHash());
                 }
                 else if (itemName.endsWith(".conf"))
@@ -98,6 +97,11 @@ public class Dar
         return manifest.getMainAttributes().getValue("Sdk-Version");
     }
 
+    public String getMainDalfPath()
+    {
+        return manifest.getMainAttributes().getValue("Main-Dalf");
+    }
+
     public Map<String, String> getSources()
     {
         return sources;
@@ -109,15 +113,17 @@ public class Dar
     }
 
     //Most Dar files have a singular
-    public DamlLf.Archive getDamlLf()
+    public DamlLf.Archive getMainDamlLf()
     {
-        if (this.damlLfArchivesByHash.keySet().size() != 1)
+        String mainDalfPath = getMainDalfPath();
+        List<String> main = this.damlLfArchivesByHash.keySet().stream().filter(mainDalfPath::endsWith).collect(Collectors.toList());
+        if (main.size() != 1)
         {
             throw new RuntimeException("The number of archives is not 1");
         }
         else
         {
-            return this.damlLfArchivesByHash.values().iterator().next();
+            return this.damlLfArchivesByHash.get(main.get(0));
         }
     }
 }

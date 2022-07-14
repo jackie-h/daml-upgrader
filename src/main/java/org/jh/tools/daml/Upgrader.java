@@ -27,7 +27,7 @@ public class Upgrader
         Dar darFrom = Dar.readDar(archivePathFrom);
         Dar darTo = Dar.readDar(archivePathTo);
 
-        ArchiveDiffs archiveDiffs = identifyTemplatesToUpgrade(darFrom.getDamlLf(), darTo.getDamlLf());
+        ArchiveDiffs archiveDiffs = identifyTemplatesToUpgrade(darFrom.getMainDamlLf(), darTo.getMainDamlLf());
         Map<String, List<Module>> upgrades = createUpgradeTemplates(archiveDiffs);
         writeUpgradesToFiles(upgrades, outputPath, darTo.getSdkVersion(), archivePathFrom, archivePathTo, dataDependencies);
         LOGGER.info(String.format("\nCreated upgrades for %d/%d contracts\n", archiveDiffs.upgradableTemplateCount(), archiveDiffs.templateCount())

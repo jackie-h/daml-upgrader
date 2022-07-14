@@ -55,7 +55,7 @@ public class UpgraderTest
         DamlCommand.cleanBuildDar("target/scenario1");
 
         Dar output = Dar.readDar("target/scenario1/.daml/dist/upgrade-1.0.0.dar");
-        ArchivePayload result = Reader.readArchive(output.getDamlLf()).right().get();
+        ArchivePayload result = Reader.readArchive(output.getMainDamlLf()).right().get();
         List<String> templates = DamlLfProtoUtils.collectTemplateNames(result.proto());
 
         Assert.assertEquals(17, templates.size());
@@ -97,7 +97,7 @@ public class UpgraderTest
         Dar dar1 = Dar.readDar(darPath1);
         Dar dar2 = Dar.readDar(darPath2);
         Assert.assertEquals("Files with same contents should have the same hash",
-                dar1.getDamlLf().getHash(), dar2.getDamlLf().getHash());
+                dar1.getMainDamlLf().getHash(), dar2.getMainDamlLf().getHash());
 
         ArchiveDiffs result = Upgrader.createUpgrades(darPath1, darPath2, "target", null);
 
