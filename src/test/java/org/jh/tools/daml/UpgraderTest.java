@@ -42,6 +42,7 @@ public class UpgraderTest
                         "| Intro.SchemaChanges  | FieldTypeChange       | Template schema changed in a way that is not auto-upgradable |\n" +
                         "| Intro.SchemaChanges  | AddOptionalField      | Ok!                                                          |\n" +
                         "| Intro.SchemaChanges  | RemoveField           | Ok!                                                          |\n" +
+                        "| Intro.SchemaChanges  | SameWithObservers     | Template has a type that is currently not supported          |\n" +
                         "| Intro.SchemaChanges  | FieldBecomesOptional  | Template schema changed in a way that is not auto-upgradable |\n" +
                         "| Intro.SchemaChanges  | FieldNameChange       | Template schema changed in a way that is not auto-upgradable |\n" +
                         "| Intro.SchemaChanges  | ReorderField          | Ok!                                                          |\n" +

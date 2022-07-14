@@ -1,5 +1,7 @@
 module Intro.SchemaChanges where
 
+import DA.Set(Set)
+
 template Same
   with
     issuer : Party
@@ -8,6 +10,17 @@ template Same
   where
     ensure amount > 0.0
     signatory issuer, owner
+
+template SameWithObservers
+  with
+    issuer : Party
+    owner : Party
+    amount : Decimal
+    observers : Set Party
+  where
+    ensure amount > 0.0
+    signatory issuer, owner
+
 
 template AddField
   with
