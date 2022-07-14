@@ -10,6 +10,11 @@ public class UpgradeTemplate
 {
     private static final Logger LOGGER =  Logger.getLogger(UpgradeTemplate.class.getName());
 
+    private static final String CREATE_CONTRACT_TEMPLATE_PART = "         archive certId\n" +
+            "         create <module_name>V2.<contract_name> with\n" +
+            "<fields:{ field |           <field> = cert.<field>\n }>" +
+            "<new_optional_fields:{ field |           <field> = None\n }>";
+
     private static final String UPGRADE_TEMPLATE_UNILATERAL = "module <module_name>.Upgrade<contract_name> where\n" +
             "\n" +
             "import qualified V1.<module_name> as <module_name>V1\n" +
@@ -26,10 +31,7 @@ public class UpgradeTemplate
             "      controller <sig_issuer>\n" +
             "      do cert \\<- fetch certId\n" +
             "         assert (cert.<sig_issuer> == <sig_issuer>)\n" +
-            "         archive certId\n" +
-            "         create <module_name>V2.<contract_name> with\n" +
-            "<fields:{ field |           <field> = cert.<field>\n }>" +
-            "<new_optional_fields:{ field |           <field> = None\n }>";
+            CREATE_CONTRACT_TEMPLATE_PART;
 
     private static final String UPGRADE_TEMPLATE_BILATERAL = "module <module_name>.Upgrade<contract_name> where\n" +
             "\n" +
@@ -64,10 +66,7 @@ public class UpgradeTemplate
             "      do cert \\<- fetch certId\n" +
             "         assert (cert.<sig_issuer> == <sig_issuer>)\n" +
             "         assert (cert.<sig_owner> == <sig_owner>)\n" +
-            "         archive certId\n" +
-            "         create <module_name>V2.<contract_name> with\n" +
-            "<fields:{ field |           <field> = cert.<field>\n }>" +
-            "<new_optional_fields:{ field |           <field> = None\n }>";
+            CREATE_CONTRACT_TEMPLATE_PART;
 
     private static final String UPGRADE_INITIATE_SCRIPT = "module <module_name>.Upgrade<contract_name>Initiate where\n" +
             "\n" +
@@ -134,10 +133,7 @@ public class UpgradeTemplate
     private static String createUnilateralUpgradeTemplate(String moduleName, TemplateDetails templateDetails)
     {
         ST upgrade = new ST(UPGRADE_TEMPLATE_UNILATERAL);
-        upgrade.add("module_name", moduleName);
-        upgrade.add("contract_name", templateDetails.name());
-        upgrade.add("fields",templateDetails.getFieldNamesInBoth());
-        upgrade.add("new_optional_fields",templateDetails.getAdditionalOptionalFields());
+        populate(upgrade, moduleName, templateDetails);
         String issuer = templateDetails.getSignatories().get(0);
         upgrade.add("sig_issuer", issuer);
         return upgrade.render();
@@ -146,16 +142,21 @@ public class UpgradeTemplate
     private static String createBilateralUpgradeTemplate(String moduleName, TemplateDetails templateDetails)
     {
         ST upgrade = new ST(UPGRADE_TEMPLATE_BILATERAL);
-        upgrade.add("module_name", moduleName);
-        upgrade.add("contract_name", templateDetails.name());
-        upgrade.add("fields",templateDetails.getFieldNamesInBoth());
-        upgrade.add("new_optional_fields",templateDetails.getAdditionalOptionalFields());
+        populate(upgrade, moduleName, templateDetails);
         //todo - try to identify the actual owner
         String issuer = templateDetails.getSignatories().get(0);
         String owner = templateDetails.getSignatories().get(1);
         upgrade.add("sig_issuer", issuer);
         upgrade.add("sig_owner", owner);
         return upgrade.render();
+    }
+
+    private static void populate(ST upgrade, String moduleName, TemplateDetails templateDetails)
+    {
+        upgrade.add("module_name", moduleName);
+        upgrade.add("contract_name", templateDetails.name());
+        upgrade.add("fields", templateDetails.getFieldNamesInBoth());
+        upgrade.add("new_optional_fields", templateDetails.getAdditionalOptionalFields());
     }
 
     private static String createInitiateUpgradeScript(String moduleName, TemplateDetails templateDetails)
