@@ -103,25 +103,25 @@ public class UpgradeTemplate
             "  <archive_name_v1>: V1\n" +
             "  <archive_name_v2>: V2\n";
 
-    public static List<Module> createUpgradeTemplatesContent(String moduleName, List<TemplateDetails> templates,
+    public static List<Module> createUpgradeTemplatesContent(String moduleName, List<String> templates,
                                                              ArchiveDiffs archiveDiffs)
     {
         List<Module> contracts = new ArrayList<>();
 
-        templates.stream().filter(TemplateDetails::canAutoUpgrade).forEach(templateDetails ->
+        templates.forEach(templateName ->
         {
-            String upgradeModuleName = "Upgrade" + templateDetails.name();
-            if (templateDetails.isUnilateral())
+            String upgradeModuleName = "Upgrade" + templateName;
+            if (archiveDiffs.isUnilateral(moduleName, templateName))
             {
-                String upgradeTemplate = createUnilateralUpgradeTemplate(moduleName, templateDetails, archiveDiffs);
+                String upgradeTemplate = createUnilateralUpgradeTemplate(moduleName, templateName, archiveDiffs);
                 contracts.add(new Module(upgradeModuleName, upgradeTemplate));
             }
-            else if (templateDetails.isBilateral())
+            else if (archiveDiffs.isBilateral(moduleName, templateName))
             {
-                String upgradeTemplate = createBilateralUpgradeTemplate(moduleName, templateDetails, archiveDiffs);
+                String upgradeTemplate = createBilateralUpgradeTemplate(moduleName, templateName, archiveDiffs);
                 contracts.add(new Module(upgradeModuleName, upgradeTemplate));
-                String upgradeInitiateScript = createInitiateUpgradeScript(moduleName, templateDetails);
-                contracts.add(new Module("Upgrade" + templateDetails.name() + "Initiate", upgradeInitiateScript));
+                String upgradeInitiateScript = createInitiateUpgradeScript(moduleName, templateName, archiveDiffs);
+                contracts.add(new Module("Upgrade" + templateName + "Initiate", upgradeInitiateScript));
             }
             else
             {
@@ -131,22 +131,22 @@ public class UpgradeTemplate
         return contracts;
     }
 
-    private static String createUnilateralUpgradeTemplate(String moduleName, TemplateDetails templateDetails, ArchiveDiffs archiveDiffs)
+    private static String createUnilateralUpgradeTemplate(String moduleName, String templateName, ArchiveDiffs archiveDiffs)
     {
         ST upgrade = new ST(UPGRADE_TEMPLATE_UNILATERAL);
-        populate(upgrade, moduleName, templateDetails.name(), archiveDiffs);
-        String issuer = templateDetails.getSignatories().get(0);
+        populate(upgrade, moduleName, templateName, archiveDiffs);
+        String issuer = archiveDiffs.getSignatories(moduleName, templateName).get(0);
         upgrade.add("sig_issuer", issuer);
         return upgrade.render();
     }
 
-    private static String createBilateralUpgradeTemplate(String moduleName, TemplateDetails templateDetails, ArchiveDiffs archiveDiffs)
+    private static String createBilateralUpgradeTemplate(String moduleName, String templateName, ArchiveDiffs archiveDiffs)
     {
         ST upgrade = new ST(UPGRADE_TEMPLATE_BILATERAL);
-        populate(upgrade, moduleName, templateDetails.name(), archiveDiffs);
+        populate(upgrade, moduleName, templateName, archiveDiffs);
         //todo - try to identify the actual owner
-        String issuer = templateDetails.getSignatories().get(0);
-        String owner = templateDetails.getSignatories().get(1);
+        String issuer = archiveDiffs.getSignatories(moduleName, templateName).get(0);
+        String owner = archiveDiffs.getSignatories(moduleName, templateName).get(1);
         upgrade.add("sig_issuer", issuer);
         upgrade.add("sig_owner", owner);
         return upgrade.render();
@@ -160,14 +160,14 @@ public class UpgradeTemplate
         upgrade.add("new_optional_fields", archiveDiffs.getAdditionalOptionalFields(moduleName, templateName));
     }
 
-    private static String createInitiateUpgradeScript(String moduleName, TemplateDetails templateDetails)
+    private static String createInitiateUpgradeScript(String moduleName, String templateName, ArchiveDiffs archiveDiffs)
     {
         ST upgrade = new ST(UPGRADE_INITIATE_SCRIPT);
         upgrade.add("module_name", moduleName);
-        upgrade.add("contract_name", templateDetails.name());
+        upgrade.add("contract_name", templateName);
         //todo - try to identify the actual owner
-        String issuer = templateDetails.getSignatories().get(0);
-        String owner = templateDetails.getSignatories().get(1);
+        String issuer = archiveDiffs.getSignatories(moduleName, templateName).get(0);
+        String owner = archiveDiffs.getSignatories(moduleName, templateName).get(1);
         upgrade.add("sig_issuer", issuer);
         upgrade.add("sig_owner", owner);
         return upgrade.render();

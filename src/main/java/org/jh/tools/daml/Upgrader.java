@@ -59,7 +59,7 @@ public class Upgrader
         Map<String, List<Module>> upgradesByModule = new HashMap<>();
         for (String moduleName : archiveDiffs.modules())
         {
-            List<TemplateDetails> upgradeable = archiveDiffs.upgradableTemplates(moduleName);
+            List<String> upgradeable = archiveDiffs.upgradableTemplates(moduleName);
 
             List<Module> contracts = UpgradeTemplate.createUpgradeTemplatesContent(moduleName, upgradeable, archiveDiffs);
             upgradesByModule.put(moduleName, contracts);

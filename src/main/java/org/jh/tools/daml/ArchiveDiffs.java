@@ -3,7 +3,6 @@ package org.jh.tools.daml;
 import com.daml.daml_lf_dev.DamlLf;
 import com.daml.daml_lf_dev.DamlLf1;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -13,30 +12,41 @@ import java.util.stream.Collectors;
 
 public class ArchiveDiffs
 {
-    private final Map<String, Map<String,TemplateDetails>> moduleTemplates = new HashMap<>();
-    private final Map<String, Map<String,FieldsDiffs>> moduleDataTypes = new HashMap<>();
+    private final Map<String, Map<String, FieldsDiffs>> moduleDataTypes = new HashMap<>();
+    private final Map<String, Map<String, List<String>>> moduleTemplateSignatories;
+    private final Map<String, Map<String, UpgradeDecision>> templateUpgradeDecision = new HashMap<>();
+
+    ArchiveDiffs()
+    {
+        this.moduleTemplateSignatories = new HashMap<>();
+    }
+
+    private ArchiveDiffs(Map<String, Map<String, List<String>>> moduleTemplateSignatories)
+    {
+        this.moduleTemplateSignatories = moduleTemplateSignatories;
+    }
 
     public Set<String> modules()
     {
-        return this.moduleTemplates.keySet();
-    }
-
-    public List<TemplateDetails> upgradableTemplates(String moduleName)
-    {
-        return this.moduleTemplates.get(moduleName).values().stream()
-                .filter(TemplateDetails::canAutoUpgrade)
-                .collect(Collectors.toList());
+        return this.templateUpgradeDecision.keySet();
     }
 
     public long templateCount()
     {
-        return moduleTemplates.values().stream().flatMap(stringTemplateDetailsMap -> stringTemplateDetailsMap.values().stream()).count();
+        return templateUpgradeDecision.values().stream().flatMap(stringTemplateDetailsMap -> stringTemplateDetailsMap.values().stream()).count();
     }
 
     public long upgradableTemplateCount()
     {
-        return moduleTemplates.values().stream().flatMap(stringTemplateDetailsMap -> stringTemplateDetailsMap.values().stream())
-                .filter(TemplateDetails::canAutoUpgrade).count();
+        return templateUpgradeDecision.values().stream().flatMap(stringTemplateDetailsMap -> stringTemplateDetailsMap.values().stream())
+                .filter(t -> t == UpgradeDecision.YES).count();
+    }
+
+    public List<String> upgradableTemplates(String moduleName)
+    {
+        return this.templateUpgradeDecision.get(moduleName).entrySet().stream()
+                .filter(e -> e.getValue() == UpgradeDecision.YES)
+                .map(Map.Entry::getKey).collect(Collectors.toList());
     }
 
     public Iterable<String> getFieldNamesInBoth(String moduleName, String templateName)
@@ -49,51 +59,44 @@ public class ArchiveDiffs
         return this.moduleDataTypes.get(moduleName).get(templateName).getAdditionalOptionalFields();
     }
 
+    public List<String> getSignatories(String moduleName, String templateName)
+    {
+        return this.moduleTemplateSignatories.get(moduleName).get(templateName);
+    }
+
+    public boolean isUnilateral(String moduleName, String templateName)
+    {
+        //Check that there is one and that it is not a collection type
+        List<String> signatories = getSignatories(moduleName, templateName);
+        return signatories.size() == 1 && this.moduleDataTypes.get(moduleName).get(templateName).fieldIsPartyType(signatories.get(0));
+    }
+
+    public boolean isBilateral(String moduleName, String templateName)
+    {
+        FieldsDiffs fieldsDiffs = this.moduleDataTypes.get(moduleName).get(templateName);
+        List<String> signatories = getSignatories(moduleName, templateName);
+        return signatories.size() == 2 && fieldsDiffs.fieldIsPartyType(signatories.get(0)) &&
+                fieldsDiffs.fieldIsPartyType(signatories.get(1));
+    }
+
     public static ArchiveDiffs create(DamlLf.ArchivePayload archiveFrom,
                          DamlLf.ArchivePayload archiveTo)
     {
-        ArchiveDiffs archiveDiffs = new ArchiveDiffs();
+        ArchiveDiffs archiveDiffs = new ArchiveDiffs(DamlLfProtoUtils.findSignatories(archiveFrom));
 
         Map<String, ModuleIndex> moduleTemplatesOne = collectTemplates(archiveFrom.getDamlLf1());
         Map<String, ModuleIndex> moduleTemplatesTwo = collectTemplates(archiveTo.getDamlLf1());
 
-        Map<String,Map<String, List<String>>> signatoriesMap = DamlLfProtoUtils.findSignatories(archiveFrom);
-
+        //Collect data types
         for(String moduleName: moduleTemplatesOne.keySet())
         {
             ModuleIndex moduleIndexOne = moduleTemplatesOne.get(moduleName);
             ModuleIndex moduleIndexTwo = moduleTemplatesTwo.get(moduleName);
-            Map<String, TemplateDetails> templates = new HashMap<>();
+
             Map<String, FieldsDiffs> dataTypes = new HashMap<>();
 
             if (moduleIndexTwo != null)
             {
-                for (String templateName : moduleIndexOne.templateNames)
-                {
-                    TemplateDetails templateDetails = new TemplateDetails(templateName);
-                    if (moduleIndexTwo.templateNames.contains(templateName))
-                    {
-
-                        List<String> signatories = signatoriesMap.getOrDefault(moduleName, new HashMap<>())
-                                .getOrDefault(templateName, new ArrayList<>());
-
-                        templateDetails.setSignatories(signatories);
-
-                        DamlLf1.DefDataType dataType1 = moduleIndexOne.dataTypes.get(templateName);
-                        DamlLf1.DefDataType dataType2 = moduleIndexTwo.dataTypes.get(templateName);
-                        FieldsDiffs fieldsDiffs = FieldsDiffs.create(
-                                dataType1.getRecord(), archiveFrom.getDamlLf1(),
-                                dataType2.getRecord(), archiveTo.getDamlLf1()
-                        );
-                        templateDetails.setFieldsDiffs(fieldsDiffs);
-                    }
-                    else
-                    {
-                        templateDetails.setTemplateRemoved();
-                    }
-                    templates.put(templateName, templateDetails);
-                }
-
                 for(String dataTypeName : moduleIndexOne.dataTypes.keySet())
                 {
                     DamlLf1.DefDataType dataType1 = moduleIndexOne.dataTypes.get(dataTypeName);
@@ -110,9 +113,36 @@ public class ArchiveDiffs
                     dataTypes.put(dataTypeName, fieldsDiffs);
                 }
             }
-            archiveDiffs.moduleTemplates.put(moduleName, templates);
             archiveDiffs.moduleDataTypes.put(moduleName, dataTypes);
         }
+
+
+        for(String moduleName: moduleTemplatesOne.keySet())
+        {
+            ModuleIndex moduleIndexOne = moduleTemplatesOne.get(moduleName);
+            ModuleIndex moduleIndexTwo = moduleTemplatesTwo.get(moduleName);
+
+            Map<String, UpgradeDecision> templateUpgradeDecision = new HashMap<>();
+
+            if (moduleIndexTwo != null)
+            {
+                for (String templateName : moduleIndexOne.templateNames)
+                {
+                    if (!moduleIndexTwo.templateNames.contains(templateName))
+                    {
+                        templateUpgradeDecision.put(templateName, UpgradeDecision.NO_TEMPLATE_REMOVED);
+                    }
+                    else
+                    {
+                        templateUpgradeDecision.put(templateName,
+                                archiveDiffs.computeUpgradeDecision(moduleName, templateName));
+                    }
+                }
+
+            }
+            archiveDiffs.templateUpgradeDecision.put(moduleName, templateUpgradeDecision);
+        }
+
         return archiveDiffs;
     }
 
@@ -127,12 +157,12 @@ public class ArchiveDiffs
         builder.append(spacer).append("\n");
         for (String module : this.modules())
         {
-            Map<String, TemplateDetails> templates = this.moduleTemplates.get(module);
+            Map<String, UpgradeDecision> templates = this.templateUpgradeDecision.get(module);
 
             for (String template : templates.keySet())
             {
-                TemplateDetails details = templates.get(template);
-                builder.append(String.format(rowFormat, module, template, details.getUpgradeDecision().getMessage()));
+                builder.append(String.format(rowFormat, module, template,
+                        templates.get(template).getMessage()));
             }
         }
         builder.append(spacer).append("\n");
@@ -145,15 +175,39 @@ public class ArchiveDiffs
         for (String key : this.modules())
         {
             maxLengths[0] = Math.max(maxLengths[0], key.length());
-            Map<String, TemplateDetails> templates = this.moduleTemplates.get(key);
+            Map<String, UpgradeDecision> templates = this.templateUpgradeDecision.get(key);
             for(String templateName: templates.keySet())
             {
-                TemplateDetails details = templates.get(templateName);
                 maxLengths[1] = Math.max(maxLengths[1], templateName.length());
-                maxLengths[2] = Math.max(maxLengths[2], details.getUpgradeDecision().getMessage().length());
+                maxLengths[2] = Math.max(maxLengths[2], templates.get(templateName).getMessage().length());
             }
         }
         return maxLengths;
+    }
+
+    private UpgradeDecision computeUpgradeDecision(String moduleName, String templateName)
+    {
+        UpgradeDecision upgradeDecision;
+        if (!(this.isUnilateral(moduleName, templateName) || this.isBilateral(moduleName, templateName)))
+        {
+            upgradeDecision = UpgradeDecision.NO_MULTI_PARTY;
+        }
+        else {
+            FieldsDiffs fieldsDiffs = this.moduleDataTypes.get(moduleName).get(templateName);
+            if (!fieldsDiffs.hasUpgradableFields())
+            {
+                upgradeDecision = UpgradeDecision.NO_NON_PRIMITIVE_TYPES;
+            }
+            else if (!fieldsDiffs.isSchemaUpgradable())
+            {
+                upgradeDecision = UpgradeDecision.NO_SCHEMA_CHANGE;
+            }
+            else
+            {
+                upgradeDecision = UpgradeDecision.YES;
+            }
+        }
+        return upgradeDecision;
     }
 
     private static Map<String,ModuleIndex> collectTemplates(DamlLf1.Package _package)
