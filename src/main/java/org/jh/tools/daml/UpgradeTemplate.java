@@ -12,13 +12,15 @@ public class UpgradeTemplate
 
     private static final String CREATE_CONTRACT_TEMPLATE_PART = "         archive certId\n" +
             "         create <module_name>V2.<contract_name> with\n" +
-            "<fields:{ field |           <field> = cert.<field>\n }>" +
+            "<fields:{ field |           <field>\n }>" +
             "<new_optional_fields:{ field |           <field> = None\n }>";
 
     private static final String UPGRADE_TEMPLATE_UNILATERAL = "module <module_name>.Upgrade<contract_name> where\n" +
             "\n" +
             "import qualified V1.<module_name> as <module_name>V1\n" +
             "import qualified V2.<module_name> as <module_name>V2\n" +
+            "\n" +
+            "<imports:{ import | import V2.<import>\n }>" +
             "\n" +
             "template Upgrade<contract_name>Agreement\n" +
             "  with\n" +
@@ -37,6 +39,8 @@ public class UpgradeTemplate
             "\n" +
             "import qualified V1.<module_name> as <module_name>V1\n" +
             "import qualified V2.<module_name> as <module_name>V2\n" +
+            "\n" +
+            "<imports:{ import | import V2.<import>\n }>" +
             "\n" +
             "template Upgrade<contract_name>Proposal\n" +
             "  with\n" +
@@ -156,7 +160,9 @@ public class UpgradeTemplate
     {
         upgrade.add("module_name", moduleName);
         upgrade.add("contract_name", templateName);
-        upgrade.add("fields", archiveDiffs.getFieldNamesInBoth(moduleName, templateName));
+        FieldConstructors fc = archiveDiffs.getFieldsInBothCopyConstructor(moduleName, templateName);
+        upgrade.add("imports", fc.getImports());
+        upgrade.add("fields", fc.getFieldSetters());
         upgrade.add("new_optional_fields", archiveDiffs.getAdditionalOptionalFields(moduleName, templateName));
     }
 

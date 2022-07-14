@@ -3,9 +3,11 @@ package org.jh.tools.daml;
 import com.daml.daml_lf_dev.DamlLf1;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class FieldsDiffs
@@ -45,10 +47,37 @@ public class FieldsDiffs
         return diffs;
     }
 
-    public Iterable<String> getFieldNamesInBoth()
+    FieldConstructors getFieldsInBothCopyConstructor(Map<String, Map<String, FieldsDiffs>> dataTypes)
     {
-        return this.fieldsInBoth;
+        Set<String> imports = new HashSet<>();
+        Iterable<String> fieldCopy = this.getFieldsInBothCopyConstructorRecursive(dataTypes, imports, "cert");
+        return new FieldConstructors(imports, fieldCopy);
     }
+
+    private Iterable<String> getFieldsInBothCopyConstructorRecursive(
+            Map<String, Map<String, FieldsDiffs>> dataTypes, Set<String> imports, String prefix)
+    {
+        List<String> fieldCopy = new ArrayList<>();
+        for(String fieldName: fieldsInBoth)
+        {
+            FieldsIndex.Type type = fieldsIndexFrom.fields.get(fieldName);
+
+            if(type instanceof FieldsIndex.DataTypeRef)
+            {
+                FieldsIndex.DataTypeRef dataTypeRef = (FieldsIndex.DataTypeRef)type;
+                FieldsDiffs diffs = dataTypes.get(dataTypeRef.moduleName).get(dataTypeRef.name);
+                fieldCopy.add(fieldName + " = " + dataTypeRef.name + " with " +
+                        String.join("; ",diffs.getFieldsInBothCopyConstructorRecursive(dataTypes, imports, prefix + "." + fieldName)));
+                imports.add(dataTypeRef.moduleName);
+            }
+            else
+            {
+                fieldCopy.add(fieldName + " = " + prefix + "." + fieldName);
+            }
+        }
+        return fieldCopy;
+    }
+
 
     public Iterable<String> getAdditionalOptionalFields()
     {
@@ -61,26 +90,54 @@ public class FieldsDiffs
         return type instanceof FieldsIndex.PrimitiveType && ((FieldsIndex.PrimitiveType)type).name.equals("PARTY");
     }
 
-    protected boolean hasUpgradableFields()
+    boolean hasUpgradableFields(Map<String, Map<String,FieldsDiffs>> dataTypes)
     {
-        return this.fieldsIndexFrom.fields.values().stream().allMatch(FieldsIndex.Type::upgradableType);
+        return this.fieldsIndexFrom.fields.values().stream().allMatch(
+                t -> t.upgradableType(dataTypes));
     }
 
-    protected boolean isSchemaUpgradable()
+    boolean isSchemaUpgradable(Map<String, Map<String,FieldsDiffs>> dataTypes)
     {
-        return this.fieldsInBothHaveSameType() &&
+        return this.fieldsInBothHaveSameType(dataTypes) &&
                 //No new fields or all optional fields
                 (this.newFields.isEmpty()
                         || this.newFields.stream().allMatch(s -> fieldsIndexTo.fields.get(s).isOptional()));
     }
 
-    private boolean fieldsInBothHaveSameType()
+    private boolean fieldsInBothHaveSameType(Map<String, Map<String,FieldsDiffs>> dataTypes)
     {
 
         for(String fieldName : this.fieldsInBoth)
         {
             FieldsIndex.Type type1 = this.fieldsIndexFrom.fields.get(fieldName);
             FieldsIndex.Type type2 = this.fieldsIndexTo.fields.get(fieldName);
+
+            if(type1.getClass() != type2.getClass())
+            {
+                return false;
+            }
+
+            if(type1 instanceof FieldsIndex.DataTypeRef)
+            {
+                FieldsIndex.DataTypeRef dataTypeRef1 = ((FieldsIndex.DataTypeRef) type1);
+                FieldsIndex.DataTypeRef dataTypeRef2 = ((FieldsIndex.DataTypeRef) type2);
+
+                if(!dataTypeRef1.moduleName.equals(dataTypeRef2.moduleName) ||
+                        !dataTypeRef1.name.equals(dataTypeRef2.name))
+                {
+                    return false;
+                }
+
+                Map<String,FieldsDiffs> moduleTypes = dataTypes.get(dataTypeRef1.moduleName);
+                if(moduleTypes != null)
+                {
+                    FieldsDiffs fieldsDiffs = moduleTypes.get(dataTypeRef1.name);
+                    if(fieldsDiffs != null)
+                        return fieldsDiffs.fieldsInBothHaveSameType(dataTypes);
+                }
+                return false;
+            }
+
             if(!type1.toString().equals(type2.toString()))
             {
                 return false;
@@ -165,7 +222,7 @@ public class FieldsDiffs
         {
             boolean isOptional();
 
-            boolean upgradableType();
+            boolean upgradableType(Map<String, Map<String,FieldsDiffs>> dataTypes);
 
         }
 
@@ -180,9 +237,10 @@ public class FieldsDiffs
             }
 
             @Override
-            public boolean upgradableType()
+            public boolean upgradableType(Map<String, Map<String,FieldsDiffs>> dataTypes)
             {
-                return this.args.stream().allMatch(Type::upgradableType);
+                return this.args.stream().allMatch(
+                        t -> !(t instanceof DataTypeRef) && t.upgradableType(dataTypes));
             }
 
             public String toString()
@@ -223,8 +281,19 @@ public class FieldsDiffs
             String name;
 
             @Override
-            public boolean upgradableType()
+            public boolean upgradableType(Map<String, Map<String,FieldsDiffs>> dataTypes)
             {
+                Map<String, FieldsDiffs> moduleDataTypes = dataTypes.get(moduleName);
+                if(moduleDataTypes != null)
+                {
+                    FieldsDiffs diffs = moduleDataTypes.get(this.name);
+                    if(diffs != null)
+                    {
+                        //todo: this won't work for circular refs - fix
+                        return diffs.hasUpgradableFields(dataTypes);
+                    }
+                }
+
                 return false;
             }
 
@@ -240,7 +309,7 @@ public class FieldsDiffs
             private String typeAsString;
 
             @Override
-            public boolean upgradableType()
+            public boolean upgradableType(Map<String, Map<String,FieldsDiffs>> dataTypes)
             {
                 return false;
             }

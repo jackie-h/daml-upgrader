@@ -49,10 +49,11 @@ public class ArchiveDiffs
                 .map(Map.Entry::getKey).collect(Collectors.toList());
     }
 
-    public Iterable<String> getFieldNamesInBoth(String moduleName, String templateName)
+    public FieldConstructors getFieldsInBothCopyConstructor(String moduleName, String templateName)
     {
-        return this.moduleDataTypes.get(moduleName).get(templateName).getFieldNamesInBoth();
+        return this.moduleDataTypes.get(moduleName).get(templateName).getFieldsInBothCopyConstructor(this.moduleDataTypes);
     }
+
 
     public Iterable<String> getAdditionalOptionalFields(String moduleName, String templateName)
     {
@@ -194,11 +195,11 @@ public class ArchiveDiffs
         }
         else {
             FieldsDiffs fieldsDiffs = this.moduleDataTypes.get(moduleName).get(templateName);
-            if (!fieldsDiffs.hasUpgradableFields())
+            if (!fieldsDiffs.hasUpgradableFields(this.moduleDataTypes))
             {
-                upgradeDecision = UpgradeDecision.NO_NON_PRIMITIVE_TYPES;
+                upgradeDecision = UpgradeDecision.NO_UNSUPPORTED_TYPES;
             }
-            else if (!fieldsDiffs.isSchemaUpgradable())
+            else if (!fieldsDiffs.isSchemaUpgradable(this.moduleDataTypes))
             {
                 upgradeDecision = UpgradeDecision.NO_SCHEMA_CHANGE;
             }
@@ -228,6 +229,7 @@ public class ArchiveDiffs
 
         static ModuleIndex create(DamlLf1.Module module, DamlLf1.Package _package)
         {
+
             ModuleIndex moduleIndex = new ModuleIndex();
             for(DamlLf1.DefTemplate template: module.getTemplatesList())
             {

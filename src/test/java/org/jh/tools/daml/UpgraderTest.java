@@ -28,28 +28,28 @@ public class UpgraderTest
                 "daml-examples/scenario1/v2/.daml/dist/carbon-2.0.0.dar",
                 "target/scenario1", "../../daml-examples/data/v1/.daml/dist/finance-1.0.0.dar");
 
-        Assert.assertEquals("-------------------------------------------------------------------------------------------------------------------------\n" +
-                        "| Module               | Template              | Result                                                                 |\n" +
-                        "-------------------------------------------------------------------------------------------------------------------------\n" +
-                        "| Intro.SchemaWithData | ContractWithDataDep   | Template has non-primitive types and those are currently not supported |\n" +
-                        "| Intro.SchemaWithData | ContractWithDataList  | Template has non-primitive types and those are currently not supported |\n" +
-                        "| Intro.SchemaWithData | ContractWithData      | Template has non-primitive types and those are currently not supported |\n" +
-                        "| Intro.MultiParty     | Agreement             | Don't know how to upgrade contracts with >2 parties yet                |\n" +
-                        "| Intro.MultiParty     | Pending               | Don't know how to upgrade contracts with >2 parties yet                |\n" +
-                        "| Intro.SchemaChanges  | FieldBecomesMandatory | Template schema changed in a way that is not auto-upgradable           |\n" +
-                        "| Intro.SchemaChanges  | Same                  | Ok!                                                                    |\n" +
-                        "| Intro.SchemaChanges  | AddField              | Template schema changed in a way that is not auto-upgradable           |\n" +
-                        "| Intro.SchemaChanges  | FieldTypeChange       | Template schema changed in a way that is not auto-upgradable           |\n" +
-                        "| Intro.SchemaChanges  | AddOptionalField      | Ok!                                                                    |\n" +
-                        "| Intro.SchemaChanges  | RemoveField           | Ok!                                                                    |\n" +
-                        "| Intro.SchemaChanges  | FieldBecomesOptional  | Template schema changed in a way that is not auto-upgradable           |\n" +
-                        "| Intro.SchemaChanges  | FieldNameChange       | Template schema changed in a way that is not auto-upgradable           |\n" +
-                        "| Intro.SchemaChanges  | ReorderField          | Ok!                                                                    |\n" +
-                        "| Carbon               | CarbonCertProposal    | Ok!                                                                    |\n" +
-                        "| Carbon               | CarbonCert            | Ok!                                                                    |\n" +
-                        "| Intro.Invite         | Invitation            | Ok!                                                                    |\n" +
-                        "| Intro.Iou            | Iou                   | Ok!                                                                    |\n" +
-                        "-------------------------------------------------------------------------------------------------------------------------\n",
+        Assert.assertEquals("---------------------------------------------------------------------------------------------------------------\n" +
+                        "| Module               | Template              | Result                                                       |\n" +
+                        "---------------------------------------------------------------------------------------------------------------\n" +
+                        "| Intro.SchemaWithData | ContractWithDataDep   | Template has a type that is currently not supported          |\n" +
+                        "| Intro.SchemaWithData | ContractWithDataList  | Template has a type that is currently not supported          |\n" +
+                        "| Intro.SchemaWithData | ContractWithData      | Ok!                                                          |\n" +
+                        "| Intro.MultiParty     | Agreement             | Don't know how to upgrade contracts with >2 parties yet      |\n" +
+                        "| Intro.MultiParty     | Pending               | Don't know how to upgrade contracts with >2 parties yet      |\n" +
+                        "| Intro.SchemaChanges  | FieldBecomesMandatory | Template schema changed in a way that is not auto-upgradable |\n" +
+                        "| Intro.SchemaChanges  | Same                  | Ok!                                                          |\n" +
+                        "| Intro.SchemaChanges  | AddField              | Template schema changed in a way that is not auto-upgradable |\n" +
+                        "| Intro.SchemaChanges  | FieldTypeChange       | Template schema changed in a way that is not auto-upgradable |\n" +
+                        "| Intro.SchemaChanges  | AddOptionalField      | Ok!                                                          |\n" +
+                        "| Intro.SchemaChanges  | RemoveField           | Ok!                                                          |\n" +
+                        "| Intro.SchemaChanges  | FieldBecomesOptional  | Template schema changed in a way that is not auto-upgradable |\n" +
+                        "| Intro.SchemaChanges  | FieldNameChange       | Template schema changed in a way that is not auto-upgradable |\n" +
+                        "| Intro.SchemaChanges  | ReorderField          | Ok!                                                          |\n" +
+                        "| Carbon               | CarbonCertProposal    | Ok!                                                          |\n" +
+                        "| Carbon               | CarbonCert            | Ok!                                                          |\n" +
+                        "| Intro.Invite         | Invitation            | Ok!                                                          |\n" +
+                        "| Intro.Iou            | Iou                   | Ok!                                                          |\n" +
+                        "---------------------------------------------------------------------------------------------------------------\n",
                 archiveDiffs.report());
 
         DamlCommand.cleanBuildDar("target/scenario1");
@@ -58,7 +58,7 @@ public class UpgraderTest
         ArchivePayload result = Reader.readArchive(output.getDamlLf()).right().get();
         List<String> templates = DamlLfProtoUtils.collectTemplateNames(result.proto());
 
-        Assert.assertEquals(15, templates.size());
+        Assert.assertEquals(17, templates.size());
         Assert.assertEquals("Carbon.UpgradeCarbonCertProposal[UpgradeCarbonCertProposalAgreement]\n" +
                         "Carbon.UpgradeCarbonCert[UpgradeCarbonCertAgreement]\n" +
                         "Carbon.UpgradeCarbonCert[UpgradeCarbonCertProposal]\n" +
@@ -73,7 +73,9 @@ public class UpgraderTest
                         "Intro.SchemaChanges.UpgradeReorderField[UpgradeReorderFieldAgreement]\n" +
                         "Intro.SchemaChanges.UpgradeReorderField[UpgradeReorderFieldProposal]\n" +
                         "Intro.SchemaChanges.UpgradeSame[UpgradeSameAgreement]\n" +
-                        "Intro.SchemaChanges.UpgradeSame[UpgradeSameProposal]",
+                        "Intro.SchemaChanges.UpgradeSame[UpgradeSameProposal]\n" +
+                        "Intro.SchemaWithData.UpgradeContractWithData[UpgradeContractWithDataAgreement]\n" +
+                        "Intro.SchemaWithData.UpgradeContractWithData[UpgradeContractWithDataProposal]",
                 String.join("\n", templates));
     }
 
