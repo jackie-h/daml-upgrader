@@ -61,7 +61,7 @@ public class Upgrader
         {
             List<TemplateDetails> upgradeable = archiveDiffs.upgradableTemplates(moduleName);
 
-            List<Module> contracts = UpgradeTemplate.createUpgradeTemplatesContent(moduleName, upgradeable);
+            List<Module> contracts = UpgradeTemplate.createUpgradeTemplatesContent(moduleName, upgradeable, archiveDiffs);
             upgradesByModule.put(moduleName, contracts);
         }
         return upgradesByModule;

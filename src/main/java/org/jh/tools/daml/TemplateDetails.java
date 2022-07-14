@@ -1,7 +1,5 @@
 package org.jh.tools.daml;
 
-import com.daml.daml_lf_dev.DamlLf1;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -14,18 +12,15 @@ public class TemplateDetails
 
     private FieldsDiffs fieldsDiffs = null;
 
-    private final DamlLf1.Package _package;
-
     private boolean templateRemoved = false;
 
     private UpgradeDecision upgradeDecision = null;
 
     private List<String> signatories = new ArrayList<>();
 
-    public TemplateDetails(String name, DamlLf1.Package _package)
+    public TemplateDetails(String name)
     {
         this.name = name;
-        this._package = _package;
     }
 
     public void setSignatories(List<String> signatories)
@@ -38,15 +33,7 @@ public class TemplateDetails
         return name;
     }
 
-    public Iterable<String> getFieldNamesInBoth()
-    {
-        return this.fieldsDiffs.getFieldNamesInBoth();
-    }
 
-    public Iterable<String> getAdditionalOptionalFields()
-    {
-        return this.fieldsDiffs.getAdditionalOptionalFields();
-    }
 
     public List<String> getSignatories()
     {

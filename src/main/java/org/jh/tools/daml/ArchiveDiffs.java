@@ -39,6 +39,16 @@ public class ArchiveDiffs
                 .filter(TemplateDetails::canAutoUpgrade).count();
     }
 
+    public Iterable<String> getFieldNamesInBoth(String moduleName, String templateName)
+    {
+        return this.moduleDataTypes.get(moduleName).get(templateName).getFieldNamesInBoth();
+    }
+
+    public Iterable<String> getAdditionalOptionalFields(String moduleName, String templateName)
+    {
+        return this.moduleDataTypes.get(moduleName).get(templateName).getAdditionalOptionalFields();
+    }
+
     public static ArchiveDiffs create(DamlLf.ArchivePayload archiveFrom,
                          DamlLf.ArchivePayload archiveTo)
     {
@@ -60,7 +70,7 @@ public class ArchiveDiffs
             {
                 for (String templateName : moduleIndexOne.templateNames)
                 {
-                    TemplateDetails templateDetails = new TemplateDetails(templateName, archiveFrom.getDamlLf1());
+                    TemplateDetails templateDetails = new TemplateDetails(templateName);
                     if (moduleIndexTwo.templateNames.contains(templateName))
                     {
 
