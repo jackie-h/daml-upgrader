@@ -2,16 +2,21 @@ package org.jh.tools.daml;
 
 import com.daml.daml_lf_dev.DamlLf;
 import com.daml.daml_lf_dev.DamlLf1;
+import com.daml.lf.archive.ArchivePayload;
+import com.daml.lf.archive.Reader;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class ArchiveDiffs
 {
+    private static final Logger LOGGER = Logger.getLogger(ArchiveDiffs.class.getName());
+
     private final Map<String, Map<String, FieldsDiffs>> moduleDataTypes = new HashMap<>();
     private final Map<String, Map<String, List<String>>> moduleTemplateSignatories;
     private final Map<String, Map<String, UpgradeDecision>> templateUpgradeDecision = new HashMap<>();
@@ -80,7 +85,28 @@ public class ArchiveDiffs
                 fieldsDiffs.fieldIsPartyType(signatories.get(1));
     }
 
-    public static ArchiveDiffs create(DamlLf.ArchivePayload archiveFrom,
+    public static ArchiveDiffs create(Dar darFrom, Dar darTo)
+    {
+        DamlLf.Archive archiveFrom = darFrom.getMainDamlLf();
+        DamlLf.Archive archiveTo = darTo.getMainDamlLf();
+        LOGGER.info(archiveFrom.getHash());
+        LOGGER.info(archiveTo.getHash());
+
+        if (archiveFrom.getHash().equals(archiveTo.getHash()))
+        {
+            LOGGER.info("Contents identical nothing to do");
+            return new ArchiveDiffs();
+        }
+
+        ArchivePayload payloadCurrent = Reader.readArchive(archiveFrom).right().get();
+        ArchivePayload payloadNew = Reader.readArchive(archiveTo).right().get();
+        LOGGER.info(payloadCurrent.pkgId());
+        LOGGER.info(payloadNew.pkgId());
+
+        return ArchiveDiffs.create(payloadCurrent.proto(), payloadNew.proto());
+    }
+
+    private static ArchiveDiffs create(DamlLf.ArchivePayload archiveFrom,
                          DamlLf.ArchivePayload archiveTo)
     {
         ArchiveDiffs archiveDiffs = new ArchiveDiffs(DamlLfProtoUtils.findSignatories(archiveFrom));

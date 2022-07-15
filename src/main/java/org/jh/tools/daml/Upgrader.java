@@ -1,9 +1,5 @@
 package org.jh.tools.daml;
 
-import com.daml.daml_lf_dev.DamlLf;
-import com.daml.lf.archive.ArchivePayload;
-import com.daml.lf.archive.Reader;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,7 +14,7 @@ public class Upgrader
     private static final Logger LOGGER = Logger.getLogger(Upgrader.class.getName());
 
     public static ArchiveDiffs createUpgrades(String archivePathFrom, String archivePathTo,
-                                                                           String outputPath, String dataDependencies)
+                                              String outputPath, String dataDependencies)
     {
         LOGGER.info("Starting upgrade");
         LOGGER.info("Archive Path From=" + archivePathFrom);
@@ -27,31 +23,12 @@ public class Upgrader
         Dar darFrom = Dar.readDar(archivePathFrom);
         Dar darTo = Dar.readDar(archivePathTo);
 
-        ArchiveDiffs archiveDiffs = identifyTemplatesToUpgrade(darFrom.getMainDamlLf(), darTo.getMainDamlLf());
+        ArchiveDiffs archiveDiffs = ArchiveDiffs.create(darFrom, darTo);
         Map<String, List<Module>> upgrades = createUpgradeTemplates(archiveDiffs);
         writeUpgradesToFiles(upgrades, outputPath, darTo.getSdkVersion(), archivePathFrom, archivePathTo, dataDependencies);
         LOGGER.info(String.format("\nCreated upgrades for %d/%d contracts\n", archiveDiffs.upgradableTemplateCount(), archiveDiffs.templateCount())
                 + archiveDiffs.report());
         return archiveDiffs;
-    }
-
-    private static ArchiveDiffs identifyTemplatesToUpgrade(DamlLf.Archive archiveFrom, DamlLf.Archive archiveTo)
-    {
-        LOGGER.info(archiveFrom.getHash());
-        LOGGER.info(archiveTo.getHash());
-
-        if (archiveFrom.getHash().equals(archiveTo.getHash()))
-        {
-            LOGGER.info("Contents identical nothing to do");
-            return new ArchiveDiffs();
-        }
-
-        ArchivePayload payloadCurrent = Reader.readArchive(archiveFrom).right().get();
-        ArchivePayload payloadNew = Reader.readArchive(archiveTo).right().get();
-        LOGGER.info(payloadCurrent.pkgId());
-        LOGGER.info(payloadNew.pkgId());
-
-        return ArchiveDiffs.create(payloadCurrent.proto(), payloadNew.proto());
     }
 
     private static Map<String, List<Module>> createUpgradeTemplates(ArchiveDiffs archiveDiffs)
