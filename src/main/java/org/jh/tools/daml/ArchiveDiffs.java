@@ -111,14 +111,14 @@ public class ArchiveDiffs
     {
         ArchiveDiffs archiveDiffs = new ArchiveDiffs(DamlLfProtoUtils.findSignatories(archiveFrom));
 
-        Map<String, ModuleIndex> moduleTemplatesOne = buildModuleIndex(archiveFrom.getDamlLf1());
-        Map<String, ModuleIndex> moduleTemplatesTwo = buildModuleIndex(archiveTo.getDamlLf1());
+        Map<String, ModuleIndex> modulesOne = buildModuleIndex(archiveFrom.getDamlLf1());
+        Map<String, ModuleIndex> modulesTwo = buildModuleIndex(archiveTo.getDamlLf1());
 
         //Collect data types
-        for(String moduleName: moduleTemplatesOne.keySet())
+        for(String moduleName: modulesOne.keySet())
         {
-            ModuleIndex moduleIndexOne = moduleTemplatesOne.get(moduleName);
-            ModuleIndex moduleIndexTwo = moduleTemplatesTwo.get(moduleName);
+            ModuleIndex moduleIndexOne = modulesOne.get(moduleName);
+            ModuleIndex moduleIndexTwo = modulesTwo.get(moduleName);
 
             Map<String, FieldsDiffs> dataTypes = new HashMap<>();
 
@@ -144,10 +144,10 @@ public class ArchiveDiffs
         }
 
 
-        for(String moduleName: moduleTemplatesOne.keySet())
+        for(String moduleName: modulesOne.keySet())
         {
-            ModuleIndex moduleIndexOne = moduleTemplatesOne.get(moduleName);
-            ModuleIndex moduleIndexTwo = moduleTemplatesTwo.get(moduleName);
+            ModuleIndex moduleIndexOne = modulesOne.get(moduleName);
+            ModuleIndex moduleIndexTwo = modulesTwo.get(moduleName);
 
             Map<String, UpgradeDecision> templateUpgradeDecision = new HashMap<>();
 
