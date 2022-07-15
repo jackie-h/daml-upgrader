@@ -132,11 +132,12 @@ public class ArchiveDiffs
                 {
                     DamlLf1.DefDataType dataType1 = moduleIndexOne.dataTypes.get(dataTypeName);
                     DamlLf1.DefDataType dataType2 = moduleIndexTwo.dataTypes.get(dataTypeName);
-                    FieldsDiffs fieldsDiffs = new FieldsDiffs();
+                    //Todo use optional or different type instead of null?
+                    FieldsDiffsDifferent fieldsDiffs = null;
 
                     if(dataType2 != null)
                     {
-                        fieldsDiffs = FieldsDiffs.create(
+                        fieldsDiffs = FieldsDiffsDifferent.create(
                                 dataType1.getRecord(), archiveFrom.getDamlLf1(),
                                 dataType2.getRecord(), archiveTo.getDamlLf1()
                         );
@@ -229,7 +230,7 @@ public class ArchiveDiffs
             {
                 upgradeDecision = UpgradeDecision.NO_UNSUPPORTED_TYPES;
             }
-            else if (!fieldsDiffs.isSchemaUpgradable(this.moduleDataTypes))
+            else if (!fieldsDiffs.fieldsHaveSameTypeAndAnyAdditionalFieldsAreOptional(this.moduleDataTypes))
             {
                 upgradeDecision = UpgradeDecision.NO_SCHEMA_CHANGE;
             }
@@ -259,7 +260,6 @@ public class ArchiveDiffs
 
         static ModuleIndex create(DamlLf1.Module module, DamlLf1.Package _package)
         {
-
             ModuleIndex moduleIndex = new ModuleIndex();
             for(DamlLf1.DefTemplate template: module.getTemplatesList())
             {
