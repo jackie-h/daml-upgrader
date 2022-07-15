@@ -98,23 +98,27 @@ public class ArchiveDiffs
             return new ArchiveDiffs();
         }
 
-        ArchivePayload payloadCurrent = Reader.readArchive(archiveFrom).right().get();
-        ArchivePayload payloadNew = Reader.readArchive(archiveTo).right().get();
-        LOGGER.info(payloadCurrent.pkgId());
-        LOGGER.info(payloadNew.pkgId());
+        ArchivePayload payloadFrom = Reader.readArchive(archiveFrom).right().get();
+        ArchivePayload payloadTo = Reader.readArchive(archiveTo).right().get();
+        LOGGER.info(payloadFrom.pkgId());
+        LOGGER.info(payloadTo.pkgId());
 
-        return ArchiveDiffs.create(payloadCurrent.proto(), payloadNew.proto());
+        DamlLf.ArchivePayload damlLfArchiveFrom = payloadFrom.proto();
+        DamlLf.ArchivePayload damlLfArchiveTo = payloadTo.proto();
+
+        ArchiveDiffs archiveDiffs = new ArchiveDiffs(DamlLfProtoUtils.findSignatories(damlLfArchiveFrom));
+
+        Map<String, ModuleIndex> modulesOne = buildModuleIndex(damlLfArchiveFrom.getDamlLf1());
+        Map<String, ModuleIndex> modulesTwo = buildModuleIndex(damlLfArchiveTo.getDamlLf1());
+
+        computeDataTypeDifferences(damlLfArchiveFrom, damlLfArchiveTo, archiveDiffs, modulesOne, modulesTwo);
+        computeUpgradeDecision(archiveDiffs, modulesOne, modulesTwo);
+
+        return archiveDiffs;
     }
 
-    private static ArchiveDiffs create(DamlLf.ArchivePayload archiveFrom,
-                         DamlLf.ArchivePayload archiveTo)
+    private static void computeDataTypeDifferences(DamlLf.ArchivePayload archiveFrom, DamlLf.ArchivePayload archiveTo, ArchiveDiffs archiveDiffs, Map<String, ModuleIndex> modulesOne, Map<String, ModuleIndex> modulesTwo)
     {
-        ArchiveDiffs archiveDiffs = new ArchiveDiffs(DamlLfProtoUtils.findSignatories(archiveFrom));
-
-        Map<String, ModuleIndex> modulesOne = buildModuleIndex(archiveFrom.getDamlLf1());
-        Map<String, ModuleIndex> modulesTwo = buildModuleIndex(archiveTo.getDamlLf1());
-
-        //Collect data types
         for(String moduleName: modulesOne.keySet())
         {
             ModuleIndex moduleIndexOne = modulesOne.get(moduleName);
@@ -142,8 +146,10 @@ public class ArchiveDiffs
             }
             archiveDiffs.moduleDataTypes.put(moduleName, dataTypes);
         }
+    }
 
-
+    private static void computeUpgradeDecision(ArchiveDiffs archiveDiffs, Map<String, ModuleIndex> modulesOne, Map<String, ModuleIndex> modulesTwo)
+    {
         for(String moduleName: modulesOne.keySet())
         {
             ModuleIndex moduleIndexOne = modulesOne.get(moduleName);
@@ -169,8 +175,6 @@ public class ArchiveDiffs
             }
             archiveDiffs.templateUpgradeDecision.put(moduleName, templateUpgradeDecision);
         }
-
-        return archiveDiffs;
     }
 
     public String report()
