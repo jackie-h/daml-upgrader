@@ -20,24 +20,27 @@ public class Dar
 
     private final String name;
     private final Map<String,String> sources;
-    private final Map<String,DamlLf.Archive> damlLfArchivesByHash;
+    private final DamlLf.Archive mainArchive;
+    private final Map<String,DamlLf.Archive> damlLfDependenciesArchivesByHash;
     private final Manifest manifest;
     private final String conf;
 
-    public Dar(String name, Manifest manifest, String conf, Map<String, String> sources, Map<String,DamlLf.Archive> damlLfArchivesByHash)
+    private Dar(String name, Manifest manifest, String conf,
+               DamlLf.Archive mainArchive,
+               Map<String, String> sources, Map<String,DamlLf.Archive> damlLfDependenciesArchivesByHash)
     {
         this.name = name;
         this.manifest = manifest;
         this.conf = conf;
         this.sources = sources;
-        this.damlLfArchivesByHash = damlLfArchivesByHash;
+        this.mainArchive = mainArchive;
+        this.damlLfDependenciesArchivesByHash = damlLfDependenciesArchivesByHash;
     }
 
     public static Dar readDar(String filePath)
     {
         Path path = Paths.get(filePath);
         String darName = path.getFileName().toString();
-        DamlLf.Archive archiveProto = null;
         Map<String,String> sources = new HashMap<>();
         Map<String,DamlLf.Archive> archives = new HashMap<>();
         Manifest manifest = null;
@@ -57,7 +60,7 @@ public class Dar
                 if (itemName.endsWith(".dalf"))
                 {
                     byte[] bytes = is.readAllBytes();
-                    archiveProto = DamlLf.Archive.parseFrom(bytes);
+                    DamlLf.Archive archiveProto = DamlLf.Archive.parseFrom(bytes);
                     archives.put(itemName, archiveProto);
                     LOGGER.fine(archiveProto.getHash());
                 }
@@ -76,7 +79,17 @@ public class Dar
                 }
             }
 
-            return new Dar(darName, manifest, conf, sources, archives);
+            String mainDalfPath = manifest.getMainAttributes().getValue("Main-Dalf");
+            List<String> main = archives.keySet().stream().filter(mainDalfPath::endsWith).collect(Collectors.toList());
+            if (main.size() != 1)
+            {
+                throw new RuntimeException("The number of main archives is not 1");
+            }
+            else
+            {
+                DamlLf.Archive mainArchive = archives.remove(main.get(0));
+                return new Dar(darName, manifest, conf, mainArchive, sources, archives);
+            }
         }
         catch (IOException e)
         {
@@ -107,23 +120,13 @@ public class Dar
         return sources;
     }
 
-    public Map<String,DamlLf.Archive> getDamlLfArchivesByHash()
-    {
-        return this.damlLfArchivesByHash;
-    }
-
-    //Most Dar files have a singular
     public DamlLf.Archive getMainDamlLf()
     {
-        String mainDalfPath = getMainDalfPath();
-        List<String> main = this.damlLfArchivesByHash.keySet().stream().filter(mainDalfPath::endsWith).collect(Collectors.toList());
-        if (main.size() != 1)
-        {
-            throw new RuntimeException("The number of archives is not 1");
-        }
-        else
-        {
-            return this.damlLfArchivesByHash.get(main.get(0));
-        }
+        return this.mainArchive;
+    }
+
+    public Map<String,DamlLf.Archive> getDependencyDamlLfs()
+    {
+        return this.damlLfDependenciesArchivesByHash;
     }
 }
