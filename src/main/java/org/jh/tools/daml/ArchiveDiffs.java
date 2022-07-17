@@ -112,6 +112,7 @@ public class ArchiveDiffs
         Map<String, ModuleIndex> modulesTwo = buildModuleIndex(damlLfArchiveTo.getDamlLf1());
 
         computeDataTypeDifferences(damlLfArchiveFrom, damlLfArchiveTo, archiveDiffs, modulesOne, modulesTwo);
+        loadDataTypesFromDependencies(darFrom, darTo, archiveDiffs);
         computeUpgradeDecision(archiveDiffs, modulesOne, modulesTwo);
 
         return archiveDiffs;
@@ -146,6 +147,40 @@ public class ArchiveDiffs
                 }
             }
             archiveDiffs.moduleDataTypes.put(moduleName, dataTypes);
+        }
+    }
+
+    private static void loadDataTypesFromDependencies(Dar darFrom, Dar darTo, ArchiveDiffs archiveDiffs)
+    {
+        Map<String, DamlLf.Archive> depArchivesFrom = darFrom.getDependencyDamlLfs();
+        Map<String, DamlLf.Archive> depArchivesTo = darTo.getDependencyDamlLfs();
+
+        for(String archiveHash : depArchivesFrom.keySet())
+        {
+            DamlLf.Archive archive = depArchivesTo.get(archiveHash);
+            //Dependency is the same, both contain
+            if(archive != null)
+            {
+                ArchivePayload payload = Reader.readArchive(archive).right().get();
+                loadDataTypes(payload.proto(), archiveDiffs);
+            }
+        }
+    }
+
+    private static void loadDataTypes(DamlLf.ArchivePayload archiveFrom, ArchiveDiffs archiveDiffs)
+    {
+        Map<String, ModuleIndex> modulesOne = buildModuleIndex(archiveFrom.getDamlLf1());
+        for(String moduleName: modulesOne.keySet())
+        {
+            ModuleIndex moduleIndexOne = modulesOne.get(moduleName);
+            Map<String, FieldsDiffs> dataTypes = archiveDiffs.moduleDataTypes.computeIfAbsent(moduleName, f -> new HashMap<>());
+
+            for(String dataTypeName : moduleIndexOne.dataTypes.keySet())
+            {
+                DamlLf1.DefDataType dataType1 = moduleIndexOne.dataTypes.get(dataTypeName);
+                FieldsDiffsSame fieldsDiffs = FieldsDiffsSame.create(dataType1.getRecord(), archiveFrom.getDamlLf1());
+                dataTypes.put(dataTypeName, fieldsDiffs);
+            }
         }
     }
 
@@ -247,7 +282,7 @@ public class ArchiveDiffs
         Map<String,ModuleIndex> moduleTemplates = new HashMap<>();
         for(DamlLf1.Module module: _package.getModulesList())
         {
-            String moduleName = DamlLfProtoUtils.getName(_package, module.getNameInternedDname());
+            String moduleName = DamlLfProtoUtils.getModuleName(_package, module);
             moduleTemplates.put(moduleName, ModuleIndex.create(module,_package));
         }
         return moduleTemplates;
@@ -268,7 +303,7 @@ public class ArchiveDiffs
             }
             for(DamlLf1.DefDataType dataType: module.getDataTypesList())
             {
-                String name = DamlLfProtoUtils.getName(_package, dataType.getNameInternedDname());
+                String name = DamlLfProtoUtils.getDataTypeName(_package, dataType);
                 moduleIndex.dataTypes.put(name,dataType);
             }
 

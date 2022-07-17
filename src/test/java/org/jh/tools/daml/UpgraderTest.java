@@ -31,7 +31,7 @@ public class UpgraderTest
         Assert.assertEquals("---------------------------------------------------------------------------------------------------------------\n" +
                         "| Module               | Template              | Result                                                       |\n" +
                         "---------------------------------------------------------------------------------------------------------------\n" +
-                        "| Intro.SchemaWithData | ContractWithDataDep   | Template has a type that is currently not supported          |\n" +
+                        "| Intro.SchemaWithData | ContractWithDataDep   | Ok!                                                          |\n" +
                         "| Intro.SchemaWithData | ContractWithDataList  | Template has a type that is currently not supported          |\n" +
                         "| Intro.SchemaWithData | ContractWithData      | Ok!                                                          |\n" +
                         "| Intro.MultiParty     | Agreement             | Don't know how to upgrade contracts with >2 parties yet      |\n" +
@@ -59,7 +59,7 @@ public class UpgraderTest
         ArchivePayload result = Reader.readArchive(output.getMainDamlLf()).right().get();
         List<String> templates = DamlLfProtoUtils.collectTemplateNames(result.proto());
 
-        Assert.assertEquals(17, templates.size());
+        Assert.assertEquals(19, templates.size());
         Assert.assertEquals("Carbon.UpgradeCarbonCertProposal[UpgradeCarbonCertProposalAgreement]\n" +
                         "Carbon.UpgradeCarbonCert[UpgradeCarbonCertAgreement]\n" +
                         "Carbon.UpgradeCarbonCert[UpgradeCarbonCertProposal]\n" +
@@ -75,6 +75,8 @@ public class UpgraderTest
                         "Intro.SchemaChanges.UpgradeReorderField[UpgradeReorderFieldProposal]\n" +
                         "Intro.SchemaChanges.UpgradeSame[UpgradeSameAgreement]\n" +
                         "Intro.SchemaChanges.UpgradeSame[UpgradeSameProposal]\n" +
+                        "Intro.SchemaWithData.UpgradeContractWithDataDep[UpgradeContractWithDataDepAgreement]\n" +
+                        "Intro.SchemaWithData.UpgradeContractWithDataDep[UpgradeContractWithDataDepProposal]\n" +
                         "Intro.SchemaWithData.UpgradeContractWithData[UpgradeContractWithDataAgreement]\n" +
                         "Intro.SchemaWithData.UpgradeContractWithData[UpgradeContractWithDataProposal]",
                 String.join("\n", templates));

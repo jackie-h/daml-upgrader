@@ -20,7 +20,7 @@ public class UpgradeTemplate
             "import qualified V1.<module_name> as <module_name>V1\n" +
             "import qualified V2.<module_name> as <module_name>V2\n" +
             "\n" +
-            "<imports:{ import | import V2.<import>\n }>" +
+            "<imports:{ import | import <import>\n }>" +
             "\n" +
             "template Upgrade<contract_name>Agreement\n" +
             "  with\n" +
@@ -40,7 +40,7 @@ public class UpgradeTemplate
             "import qualified V1.<module_name> as <module_name>V1\n" +
             "import qualified V2.<module_name> as <module_name>V2\n" +
             "\n" +
-            "<imports:{ import | import V2.<import>\n }>" +
+            "<imports:{ import | import <import>\n }>" +
             "\n" +
             "template Upgrade<contract_name>Proposal\n" +
             "  with\n" +

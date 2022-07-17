@@ -1,5 +1,7 @@
 package org.jh.tools.daml;
 
+import com.daml.daml_lf_dev.DamlLf1;
+
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -41,5 +43,11 @@ public class FieldsDiffsSame extends FieldsDiffs
     boolean fieldsInBothHaveSameType(Map<String, Map<String, FieldsDiffs>> dataTypes)
     {
         return true;
+    }
+
+    public static FieldsDiffsSame create(DamlLf1.DefDataType.Fields fieldsFrom, DamlLf1.Package _package1)
+    {
+        FieldsIndex fieldsIndexFrom = FieldsIndex.create(fieldsFrom, _package1);
+        return new FieldsDiffsSame(fieldsIndexFrom);
     }
 }

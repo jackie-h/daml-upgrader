@@ -51,7 +51,15 @@ abstract class FieldsDiffs
                 FieldsDiffs diffs = dataTypes.get(dataTypeRef.moduleName).get(dataTypeRef.name);
                 fieldCopy.add(fieldName + " = " + dataTypeRef.name + " with " +
                         String.join("; ",diffs.getFieldsInBothCopyConstructorRecursive(dataTypes, imports, prefix + "." + fieldName)));
-                imports.add(dataTypeRef.moduleName);
+                if(diffs instanceof FieldsDiffsDifferent)
+                {
+                    imports.add("V2." + dataTypeRef.moduleName);
+                }
+                else
+                {
+                    //Imported and the same
+                    imports.add(dataTypeRef.moduleName);
+                }
             }
             else
             {
@@ -84,7 +92,7 @@ abstract class FieldsDiffs
             FieldsIndex fieldsIndex = new FieldsIndex();
             for(DamlLf1.FieldWithType ft: fields.getFieldsList())
             {
-                String fieldName = _package.getInternedStrings(ft.getFieldInternedStr());
+                String fieldName = DamlLfProtoUtils.getFieldWithTypeFieldName(_package, ft);
                 Type type = getType(ft.getType(), _package);
                 fieldsIndex.fields.put(fieldName, type);
             }

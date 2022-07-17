@@ -2,6 +2,7 @@ package org.jh.tools.daml;
 
 import com.daml.daml_lf_dev.DamlLf;
 import com.daml.daml_lf_dev.DamlLf1;
+import com.google.protobuf.ProtocolStringList;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -94,6 +95,53 @@ public class DamlLfProtoUtils
         return templateSignatories;
     }
 
+    public static String getDataTypeName(DamlLf1.Package _package, DamlLf1.DefDataType dataType)
+    {
+        if(dataType.hasNameInternedDname())
+        {
+            return getName(_package, dataType.getNameInternedDname());
+        }
+        else if(dataType.hasNameDname())
+        {
+            return getName(dataType.getNameDname());
+        }
+        else
+        {
+            throw new RuntimeException("Don't know how to find module name");
+        }
+    }
+
+    public static String getModuleName(DamlLf1.Package _package, DamlLf1.Module module)
+    {
+        if(module.hasNameInternedDname())
+        {
+            return getName(_package, module.getNameInternedDname());
+        }
+        else if(module.hasNameDname())
+        {
+            return getName(module.getNameDname());
+        }
+        else
+        {
+            throw new RuntimeException("Don't know how to find module name");
+        }
+    }
+
+    public static String getFieldWithTypeFieldName(DamlLf1.Package _package, DamlLf1.FieldWithType fieldWithType)
+    {
+        if(fieldWithType.hasFieldInternedStr())
+        {
+            return _package.getInternedStrings(fieldWithType.getFieldInternedStr());
+        }
+        else if(fieldWithType.hasFieldStr())
+        {
+            return fieldWithType.getFieldStr();
+        }
+        else
+        {
+            throw new RuntimeException("Don't know how to find module name");
+        }
+    }
 
     public static String getName(DamlLf1.Package _package, int internedDname)
     {
@@ -107,5 +155,10 @@ public class DamlLfProtoUtils
         return String.join(".", names);
     }
 
+    private static String getName(DamlLf1.DottedName dottedName)
+    {
+        ProtocolStringList segments = dottedName.getSegmentsList();
+        return String.join(".", segments);
+    }
 
 }
