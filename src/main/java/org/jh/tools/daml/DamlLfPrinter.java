@@ -125,7 +125,7 @@ public class DamlLfPrinter
             builder.append("}\n");
         }
         builder.append(tab);
-        builder.append("name_interned_dname: ").append(DamlLfProtoUtils.getName(_package,nameWithType.getNameInternedDname())).append("\n");
+        builder.append("name_interned_dname: ").append(DamlLfProtoUtils.getName(_package,nameWithType)).append("\n");
     }
 
 
@@ -133,8 +133,13 @@ public class DamlLfPrinter
     {
         if(damlLfTemplate.hasTyconInternedDname())
         {
-            builder.append("tycon_interned_dname: ").append(DamlLfProtoUtils.getName(_package,damlLfTemplate.getTyconInternedDname())).append("\n");
+            builder.append("tycon_interned_dname: ").append(DamlLfProtoUtils.getTemplateName(_package,damlLfTemplate)).append("\n");
         }
+        else if(damlLfTemplate.hasTyconDname())
+        {
+            builder.append("tycon_dname: ").append(DamlLfProtoUtils.getTemplateName(_package,damlLfTemplate)).append("\n");
+        }
+
         if(damlLfTemplate.hasPrecond())
         {
             builder.append("pre_cond {\n");
@@ -871,7 +876,16 @@ public class DamlLfPrinter
             builder.append(tab);
             builder.append("}\n");
         }
-        builder.append(tab).append("name_interned_dname: ").append(DamlLfProtoUtils.getName(_package, typeConName.getNameInternedDname())).append("\n");
+        if( typeConName.hasNameInternedDname())
+        {
+            builder.append(tab).append("name_interned_dname: ").append(DamlLfProtoUtils.getName(_package, typeConName))
+                    .append("\n");
+        }
+        if( typeConName.hasNameDname())
+        {
+            builder.append(tab).append("name_dname: ").append(DamlLfProtoUtils.getName(_package, typeConName))
+                    .append("\n");
+        }
     }
 
     private static void print(StringBuilder builder, String tab, DamlLf1.ValName valName, DamlLf1.Package _package)
@@ -884,7 +898,7 @@ public class DamlLfPrinter
             builder.append(tab);
             builder.append("}\n");
         }
-        builder.append(tab).append("name_interned_dname: ").append(DamlLfProtoUtils.getName(_package, valName.getNameInternedDname())).append("\n");
+        builder.append(tab).append("name_interned_dname: ").append(DamlLfProtoUtils.getName(_package, valName)).append("\n");
     }
 
     private static void print(StringBuilder builder, String tab, DamlLf1.ModuleRef moduleRef, DamlLf1.Package _package)
@@ -904,7 +918,14 @@ public class DamlLfPrinter
         {
             builder.append(tab);
             builder.append("module_name_interned_dname: ")
-                    .append(DamlLfProtoUtils.getName(_package, moduleRef.getModuleNameInternedDname()))
+                    .append(DamlLfProtoUtils.getModuleName(_package, moduleRef))
+                    .append("\n");
+        }
+        else if(moduleRef.hasModuleNameDname())
+        {
+            builder.append(tab);
+            builder.append("module_name_dname: ")
+                    .append(DamlLfProtoUtils.getModuleName(_package, moduleRef))
                     .append("\n");
         }
     }

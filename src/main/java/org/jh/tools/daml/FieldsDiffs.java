@@ -126,19 +126,15 @@ abstract class FieldsDiffs
                 if(tCon.hasTycon())
                 {
                     DamlLf1.TypeConName typeConName = tCon.getTycon();
+                    DataTypeRef dtr = new DataTypeRef();
+                    dtr.name = DamlLfProtoUtils.getName(_package, typeConName);
+
                     if(typeConName.hasModule())
                     {
                         DamlLf1.ModuleRef ref = typeConName.getModule();
-                        if(ref.hasModuleNameInternedDname())
-                        {
-                            String moduleName = DamlLfProtoUtils.getName(_package, ref.getModuleNameInternedDname());
-                            String name = DamlLfProtoUtils.getName(_package, typeConName.getNameInternedDname());
-                            DataTypeRef dtr = new DataTypeRef();
-                            dtr.moduleName = moduleName;
-                            dtr.name = name;
-                            type = dtr;
-                        }
+                        dtr.moduleName = DamlLfProtoUtils.getModuleName(_package, ref);
                     }
+                    type = dtr;
                 }
             }
 

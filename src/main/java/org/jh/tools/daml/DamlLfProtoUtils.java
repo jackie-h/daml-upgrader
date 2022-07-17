@@ -9,9 +9,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class DamlLfProtoUtils
 {
+    private static final Logger LOGGER =  Logger.getLogger(DamlLfProtoUtils.class.getName());
 
     public static List<String> collectTemplateNames(DamlLf.ArchivePayload input)
     {
@@ -20,10 +22,10 @@ public class DamlLfProtoUtils
 
         for(DamlLf1.Module module : _package.getModulesList())
         {
-            String moduleName = DamlLfProtoUtils.getName(_package, module.getNameInternedDname());
+            String moduleName = DamlLfProtoUtils.getModuleName(_package, module);
             for(DamlLf1.DefTemplate template: module.getTemplatesList())
             {
-                String templateName = DamlLfProtoUtils.getName(_package, template.getTyconInternedDname());
+                String templateName = DamlLfProtoUtils.getTemplateName(_package, template);
                 templates.add(moduleName + "[" + templateName + "]");
             }
         }
@@ -61,7 +63,7 @@ public class DamlLfProtoUtils
             {
                 if(value.hasNameWithType())
                 {
-                    String name = getName(_package, value.getNameWithType().getNameInternedDname());
+                    String name = getName(_package, value.getNameWithType());
                     if(name.startsWith("$$csignatory"))
                     {
                         if(value.hasExpr())
@@ -76,15 +78,27 @@ public class DamlLfProtoUtils
                                 for(DamlLf1.Binding binding: block.getBindingsList())
                                 {
                                     DamlLf1.Expr bound = binding.getBound();
-                                    DamlLf1.Expr.RecProj recProj = bound.getRecProj();
-                                    String signatoryName = _package.getInternedStrings(recProj.getFieldInternedStr());
-                                    DamlLf1.TypeConName typeConName = recProj.getTycon().getTycon();
-                                    String certName = getName(_package, typeConName.getNameInternedDname());
-                                    String moduleName = getName(_package, typeConName.getModule().getModuleNameInternedDname());
 
-                                    Map<String, List<String>> templateSigs = templateSignatories.computeIfAbsent(moduleName, k -> new HashMap<>());
-                                    List<String> signatories = templateSigs.computeIfAbsent(certName, k -> new ArrayList<>());
-                                    signatories.add(signatoryName);
+                                    if (bound.hasRecProj())
+                                    {
+                                        DamlLf1.Expr.RecProj recProj = bound.getRecProj();
+                                        String signatoryName = _package.getInternedStrings(recProj.getFieldInternedStr());
+
+                                        if (recProj.hasTycon())
+                                        {
+                                            DamlLf1.TypeConName typeConName = recProj.getTycon().getTycon();
+                                            String certName = getName(_package, typeConName);
+                                            String moduleName = getModuleName(_package, typeConName.getModule());
+
+                                            Map<String, List<String>> templateSigs = templateSignatories.computeIfAbsent(moduleName, k -> new HashMap<>());
+                                            List<String> signatories = templateSigs.computeIfAbsent(certName, k -> new ArrayList<>());
+                                            signatories.add(signatoryName);
+                                        }
+                                        else
+                                        {
+                                            LOGGER.warning("Don't know how to extract signatory");
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -107,7 +121,7 @@ public class DamlLfProtoUtils
         }
         else
         {
-            throw new RuntimeException("Don't know how to find module name");
+            throw new RuntimeException("Don't know how to find data type name");
         }
     }
 
@@ -127,6 +141,38 @@ public class DamlLfProtoUtils
         }
     }
 
+    public static String getModuleName(DamlLf1.Package _package, DamlLf1.ModuleRef module)
+    {
+        if(module.hasModuleNameInternedDname())
+        {
+            return getName(_package, module.getModuleNameInternedDname());
+        }
+        else if(module.hasModuleNameDname())
+        {
+            return getName(module.getModuleNameDname());
+        }
+        else
+        {
+            throw new RuntimeException("Don't know how to find module name");
+        }
+    }
+
+    public static String getTemplateName(DamlLf1.Package _package, DamlLf1.DefTemplate template)
+    {
+        if(template.hasTyconInternedDname())
+        {
+            return getName(_package, template.getTyconInternedDname());
+        }
+        else if(template.hasTyconDname())
+        {
+            return getName(template.getTyconDname());
+        }
+        else
+        {
+            throw new RuntimeException("Don't know how to find template name");
+        }
+    }
+
     public static String getFieldWithTypeFieldName(DamlLf1.Package _package, DamlLf1.FieldWithType fieldWithType)
     {
         if(fieldWithType.hasFieldInternedStr())
@@ -139,11 +185,53 @@ public class DamlLfProtoUtils
         }
         else
         {
-            throw new RuntimeException("Don't know how to find module name");
+            throw new RuntimeException("Don't know how to find name");
         }
     }
 
-    public static String getName(DamlLf1.Package _package, int internedDname)
+    public static String getName(DamlLf1.Package _package, DamlLf1.DefValue.NameWithType nameWithType)
+    {
+        if(nameWithType.getNameDnameCount() > 0)
+        {
+            ProtocolStringList segments = nameWithType.getNameDnameList();
+            return String.join(".", segments);
+        }
+        else
+        {
+            return getName(_package, nameWithType.getNameInternedDname());
+        }
+    }
+
+    public static String getName(DamlLf1.Package _package, DamlLf1.TypeConName typeConName)
+    {
+        if(typeConName.hasNameInternedDname())
+        {
+            return getName(_package, typeConName.getNameInternedDname());
+        }
+        else if(typeConName.hasNameDname())
+        {
+            return getName(typeConName.getNameDname());
+        }
+        else
+        {
+            throw new RuntimeException("Don't know how to find name");
+        }
+    }
+
+    public static String getName(DamlLf1.Package _package, DamlLf1.ValName valName)
+    {
+        if(valName.getNameDnameCount() > 0)
+        {
+            ProtocolStringList segments = valName.getNameDnameList();
+            return String.join(".", segments);
+        }
+        else
+        {
+            return getName(_package, valName.getNameInternedDname());
+        }
+    }
+
+    private static String getName(DamlLf1.Package _package, int internedDname)
     {
         DamlLf1.InternedDottedName iName = _package.getInternedDottedNames(internedDname);
         List<Integer> segments = iName.getSegmentsInternedStrList();

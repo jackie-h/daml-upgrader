@@ -298,7 +298,7 @@ public class ArchiveDiffs
             ModuleIndex moduleIndex = new ModuleIndex();
             for(DamlLf1.DefTemplate template: module.getTemplatesList())
             {
-                String name = DamlLfProtoUtils.getName(_package, template.getTyconInternedDname());
+                String name = DamlLfProtoUtils.getTemplateName(_package, template);
                 moduleIndex.templateNames.add(name);
             }
             for(DamlLf1.DefDataType dataType: module.getDataTypesList())
