@@ -79,10 +79,10 @@ public class DamlLfPrinter
             builder.append("fields {\n");
             if (fieldWithType.hasType())
             {
-                builder.append(tab);
+                builder.append(tab).append(" ");
                 builder.append("type {\n");
-                print(builder, tab + " ", fieldWithType.getType(), _package);
-                builder.append(tab);
+                print(builder, tab + "  ", fieldWithType.getType(), _package);
+                builder.append(tab).append(" ");
                 builder.append("}\n");
             }
             if (fieldWithType.hasFieldInternedStr())
