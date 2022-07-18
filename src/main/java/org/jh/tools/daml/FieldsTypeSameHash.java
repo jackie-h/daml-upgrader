@@ -6,11 +6,14 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class FieldsDiffsSame extends FieldsDiffs
+/**
+ * Used when the Type is in a dependency and the hash is the same don't need a conversion
+ */
+public class FieldsTypeSameHash extends FieldsDiffs
 {
     private final Set<String> empty = new HashSet<>();
 
-    FieldsDiffsSame(FieldsIndex fieldsIndexFrom)
+    FieldsTypeSameHash(FieldsIndex fieldsIndexFrom)
     {
         super(fieldsIndexFrom);
     }
@@ -33,6 +36,11 @@ public class FieldsDiffsSame extends FieldsDiffs
         return empty;
     }
 
+    boolean hasUpgradableFields(Map<String, Map<String, FieldsDiffs>> dataTypes)
+    {
+        return true;
+    }
+
     @Override
     boolean fieldsHaveSameTypeAndAnyAdditionalFieldsAreOptional(Map<String, Map<String, FieldsDiffs>> dataTypes)
     {
@@ -45,9 +53,9 @@ public class FieldsDiffsSame extends FieldsDiffs
         return true;
     }
 
-    public static FieldsDiffsSame create(DamlLf1.DefDataType.Fields fieldsFrom, DamlLf1.Package _package1)
+    public static FieldsTypeSameHash create(DamlLf1.DefDataType.Fields fieldsFrom, DamlLf1.Package _package1)
     {
         FieldsIndex fieldsIndexFrom = FieldsIndex.create(fieldsFrom, _package1);
-        return new FieldsDiffsSame(fieldsIndexFrom);
+        return new FieldsTypeSameHash(fieldsIndexFrom);
     }
 }

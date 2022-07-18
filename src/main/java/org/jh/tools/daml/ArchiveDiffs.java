@@ -5,6 +5,7 @@ import com.daml.daml_lf_dev.DamlLf1;
 import com.daml.lf.archive.ArchivePayload;
 import com.daml.lf.archive.Reader;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -178,7 +179,7 @@ public class ArchiveDiffs
             for(String dataTypeName : moduleIndexOne.dataTypes.keySet())
             {
                 DamlLf1.DefDataType dataType1 = moduleIndexOne.dataTypes.get(dataTypeName);
-                FieldsDiffsSame fieldsDiffs = FieldsDiffsSame.create(dataType1.getRecord(), archiveFrom.getDamlLf1());
+                FieldsTypeSameHash fieldsDiffs = FieldsTypeSameHash.create(dataType1.getRecord(), archiveFrom.getDamlLf1());
                 dataTypes.put(dataTypeName, fieldsDiffs);
             }
         }

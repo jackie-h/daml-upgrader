@@ -29,6 +29,7 @@ abstract class FieldsDiffs
 
     abstract boolean fieldsInBothHaveSameType(Map<String, Map<String, FieldsDiffs>> dataTypes);
 
+    abstract boolean hasUpgradableFields(Map<String, Map<String, FieldsDiffs>> dataTypes);
 
     FieldConstructors getFieldsInBothCopyConstructor(Map<String, Map<String, FieldsDiffs>> dataTypes)
     {
@@ -74,14 +75,6 @@ abstract class FieldsDiffs
         FieldsIndex.Type type = this.fieldsIndexFrom.fields.get(fieldName);
         return type instanceof FieldsIndex.PrimitiveType && ((FieldsIndex.PrimitiveType)type).name.equals("PARTY");
     }
-
-    boolean hasUpgradableFields(Map<String, Map<String, FieldsDiffs>> dataTypes)
-    {
-        return this.fieldsIndexFrom.fields.values().stream().allMatch(
-                t -> t.upgradableType(dataTypes));
-    }
-
-
 
     static class FieldsIndex
     {
@@ -244,7 +237,7 @@ abstract class FieldsDiffs
             @Override
             public boolean upgradableType(Map<String, Map<String, FieldsDiffs>> dataTypes)
             {
-                return false;
+                return true;
             }
 
             public String toString()

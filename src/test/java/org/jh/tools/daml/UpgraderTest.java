@@ -42,7 +42,7 @@ public class UpgraderTest
                         "| Intro.SchemaChanges  | FieldTypeChange       | Template schema changed in a way that is not auto-upgradable |\n" +
                         "| Intro.SchemaChanges  | AddOptionalField      | Ok!                                                          |\n" +
                         "| Intro.SchemaChanges  | RemoveField           | Ok!                                                          |\n" +
-                        "| Intro.SchemaChanges  | SameWithObservers     | Template has a type that is currently not supported          |\n" +
+                        "| Intro.SchemaChanges  | SameWithObservers     | Ok!                                                          |\n" +
                         "| Intro.SchemaChanges  | FieldBecomesOptional  | Template schema changed in a way that is not auto-upgradable |\n" +
                         "| Intro.SchemaChanges  | FieldNameChange       | Template schema changed in a way that is not auto-upgradable |\n" +
                         "| Intro.SchemaChanges  | ReorderField          | Ok!                                                          |\n" +
@@ -59,7 +59,7 @@ public class UpgraderTest
         ArchivePayload result = Reader.readArchive(output.getMainDamlLf()).right().get();
         List<String> templates = DamlLfProtoUtils.collectTemplateNames(result.proto());
 
-        Assert.assertEquals(19, templates.size());
+        Assert.assertEquals(21, templates.size());
         Assert.assertEquals("Carbon.UpgradeCarbonCertProposal[UpgradeCarbonCertProposalAgreement]\n" +
                         "Carbon.UpgradeCarbonCert[UpgradeCarbonCertAgreement]\n" +
                         "Carbon.UpgradeCarbonCert[UpgradeCarbonCertProposal]\n" +
@@ -73,6 +73,8 @@ public class UpgraderTest
                         "Intro.SchemaChanges.UpgradeRemoveField[UpgradeRemoveFieldProposal]\n" +
                         "Intro.SchemaChanges.UpgradeReorderField[UpgradeReorderFieldAgreement]\n" +
                         "Intro.SchemaChanges.UpgradeReorderField[UpgradeReorderFieldProposal]\n" +
+                        "Intro.SchemaChanges.UpgradeSameWithObservers[UpgradeSameWithObserversAgreement]\n" +
+                        "Intro.SchemaChanges.UpgradeSameWithObservers[UpgradeSameWithObserversProposal]\n" +
                         "Intro.SchemaChanges.UpgradeSame[UpgradeSameAgreement]\n" +
                         "Intro.SchemaChanges.UpgradeSame[UpgradeSameProposal]\n" +
                         "Intro.SchemaWithData.UpgradeContractWithDataDep[UpgradeContractWithDataDepAgreement]\n" +

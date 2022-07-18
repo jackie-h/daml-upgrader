@@ -51,6 +51,12 @@ public class FieldsDiffsDifferent extends FieldsDiffs
         return diffs;
     }
 
+    boolean hasUpgradableFields(Map<String, Map<String, FieldsDiffs>> dataTypes)
+    {
+        return this.fieldsIndexFrom.fields.values().stream().allMatch(
+                t -> t.upgradableType(dataTypes));
+    }
+
     boolean fieldsHaveSameTypeAndAnyAdditionalFieldsAreOptional(Map<String, Map<String, FieldsDiffs>> dataTypes)
     {
         return this.fieldsInBothHaveSameType(dataTypes) &&
