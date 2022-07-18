@@ -85,9 +85,18 @@ public class DamlLfPrinter
                 builder.append(tab);
                 builder.append("}\n");
             }
-            builder.append(tab);
-            builder.append("field_interned_str: ").append(_package.getInternedStrings(fieldWithType.getFieldInternedStr())).append("\n");
-            builder.append(tab);
+            if (fieldWithType.hasFieldInternedStr())
+            {
+                builder.append(tab);
+                builder.append("field_interned_str: ").append(_package.getInternedStrings(fieldWithType.getFieldInternedStr())).append("\n");
+                builder.append(tab);
+            }
+            if (fieldWithType.hasFieldStr())
+            {
+                builder.append(tab);
+                builder.append("field_str: ").append(fieldWithType.getFieldStr()).append("\n");
+                builder.append(tab);
+            }
             builder.append("}\n");
         }
     }
@@ -382,8 +391,71 @@ public class DamlLfPrinter
             builder.append(tab);
             builder.append("builtin: ").append(expr.getBuiltin()).append("\n");
         }
+        else if(expr.hasVariantCon())
+        {
+            builder.append(tab);
+            builder.append("variant_con {\n");
+            print(builder, tab + " ", expr.getVariantCon(), _package);
+            builder.append(tab);
+            builder.append("}\n");
+        }
+        else if(expr.hasEnumCon())
+        {
+            builder.append(tab);
+            builder.append("enum_con { TODO\n");
+            //print(builder, tab + " ", expr.getEnumCon(), _package);
+            builder.append(tab);
+            builder.append("}\n");
+        }
+        else if(expr.hasVarStr())
+        {
+            builder.append(tab);
+            builder.append("var_str: ");
+            builder.append(expr.getVarStr());
+            builder.append("\n");
+        }
+        else if(expr.hasOptionalNone())
+        {
+            builder.append(tab);
+            builder.append("optional_none { TODO\n");
+            //print(builder, tab + " ", expr.getOptionalNone(), _package);
+            builder.append(tab);
+            builder.append("}\n");
+        }
+        else if(expr.hasOptionalSome())
+        {
+            builder.append(tab);
+            builder.append("optional_some { TODO\n");
+            //print(builder, tab + " ", expr.getOptionalSome(), _package);
+            builder.append(tab);
+            builder.append("}\n");
+        }
+        else if(expr.hasScenario())
+        {
+            builder.append(tab);
+            builder.append("scenario { TODO\n");
+            //print(builder, tab + " ", expr.getScenario(), _package);
+            builder.append(tab);
+            builder.append("}\n");
+        }
+        else if(expr.hasToAnyException())
+        {
+            builder.append(tab);
+            builder.append("to_any_exception { TODO\n");
+            //print(builder, tab + " ", expr.getToAnyException(), _package);
+            builder.append(tab);
+            builder.append("}\n");
+        }
+        else if(expr.hasFromAnyException())
+        {
+            builder.append(tab);
+            builder.append("from_any_exception { TODO\n");
+            //print(builder, tab + " ", expr.getFromAnyException(), _package);
+            builder.append(tab);
+            builder.append("}\n");
+        }
         else {
-           throw new RuntimeException("Bad!");
+           throw new RuntimeException("Don't know how to print Expr type!");
         }
 
         if(expr.hasLocation())
@@ -393,6 +465,33 @@ public class DamlLfPrinter
             //print(builder, tab + " ", expr.getPrimLit(),_package);
             builder.append(tab);
             builder.append("}\n");
+        }
+    }
+
+    private static void print(StringBuilder builder, String tab, DamlLf1.Expr.VariantCon variantCon, DamlLf1.Package _package)
+    {
+        if(variantCon.hasTycon())
+        {
+            builder.append(tab);
+            builder.append("tycon {\n");
+            print(builder, tab + " ", variantCon.getTycon(), _package);
+            builder.append(tab);
+            builder.append("}\n");
+        }
+        if(variantCon.hasVariantArg())
+        {
+            builder.append(tab);
+            builder.append("variant_arg {\n");
+            print(builder, tab + " ", variantCon.getVariantArg(), _package);
+            builder.append(tab);
+            builder.append("}\n");
+        }
+        if(variantCon.hasVariantConInternedStr())
+        {
+            builder.append(tab);
+            builder.append("variant_con_interned_str: ")
+                    .append(_package.getInternedStrings(variantCon.getVariantConInternedStr()))
+                    .append("\n");
         }
     }
 
@@ -998,7 +1097,7 @@ public class DamlLfPrinter
             {
                 builder.append(tab);
                 builder.append("struct {\n");
-                printFieldsWithType(builder, tab, type.getStruct().getFieldsList(), _package);
+                printFieldsWithType(builder, tab + " ", type.getStruct().getFieldsList(), _package);
                 builder.append(tab);
                 builder.append("}\n");
             }
