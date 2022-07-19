@@ -11,7 +11,7 @@ template Same
     ensure amount > 0.0
     signatory issuer, owner
 
-template SameWithObservers
+template SameWithSetPrimitives
   with
     issuer : Party
     owner : Party

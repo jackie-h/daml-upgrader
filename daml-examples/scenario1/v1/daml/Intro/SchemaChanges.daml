@@ -10,7 +10,7 @@ template Same
   where
     signatory issuer, owner
 
-template SameWithObservers
+template SameWithSetPrimitives
   with
     issuer : Party
     owner : Party

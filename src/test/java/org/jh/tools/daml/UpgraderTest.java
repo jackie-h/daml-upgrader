@@ -42,8 +42,8 @@ public class UpgraderTest
                         "| Intro.SchemaChanges  | FieldTypeChange       | Template schema changed in a way that is not auto-upgradable |\n" +
                         "| Intro.SchemaChanges  | AddOptionalField      | Ok!                                                          |\n" +
                         "| Intro.SchemaChanges  | RemoveField           | Ok!                                                          |\n" +
-                        "| Intro.SchemaChanges  | SameWithObservers     | Ok!                                                          |\n" +
                         "| Intro.SchemaChanges  | FieldBecomesOptional  | Template schema changed in a way that is not auto-upgradable |\n" +
+                        "| Intro.SchemaChanges  | SameWithSetPrimitives | Ok!                                                          |\n" +
                         "| Intro.SchemaChanges  | FieldNameChange       | Template schema changed in a way that is not auto-upgradable |\n" +
                         "| Intro.SchemaChanges  | ReorderField          | Ok!                                                          |\n" +
                         "| Carbon               | CarbonCertProposal    | Ok!                                                          |\n" +
@@ -73,8 +73,8 @@ public class UpgraderTest
                         "Intro.SchemaChanges.UpgradeRemoveField[UpgradeRemoveFieldProposal]\n" +
                         "Intro.SchemaChanges.UpgradeReorderField[UpgradeReorderFieldAgreement]\n" +
                         "Intro.SchemaChanges.UpgradeReorderField[UpgradeReorderFieldProposal]\n" +
-                        "Intro.SchemaChanges.UpgradeSameWithObservers[UpgradeSameWithObserversAgreement]\n" +
-                        "Intro.SchemaChanges.UpgradeSameWithObservers[UpgradeSameWithObserversProposal]\n" +
+                        "Intro.SchemaChanges.UpgradeSameWithSetPrimitives[UpgradeSameWithSetPrimitivesAgreement]\n" +
+                        "Intro.SchemaChanges.UpgradeSameWithSetPrimitives[UpgradeSameWithSetPrimitivesProposal]\n" +
                         "Intro.SchemaChanges.UpgradeSame[UpgradeSameAgreement]\n" +
                         "Intro.SchemaChanges.UpgradeSame[UpgradeSameProposal]\n" +
                         "Intro.SchemaWithData.UpgradeContractWithDataDep[UpgradeContractWithDataDepAgreement]\n" +
