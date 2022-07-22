@@ -45,6 +45,7 @@ public class UpgraderTest
                         "| Intro.SchemaChanges  | FieldBecomesOptional  | Template schema changed in a way that is not auto-upgradable |\n" +
                         "| Intro.SchemaChanges  | SameWithSetPrimitives | Ok!                                                          |\n" +
                         "| Intro.SchemaChanges  | FieldNameChange       | Template schema changed in a way that is not auto-upgradable |\n" +
+                        "| Intro.SchemaChanges  | SameWithType          | Ok!                                                          |\n" +
                         "| Intro.SchemaChanges  | ReorderField          | Ok!                                                          |\n" +
                         "| Carbon               | CarbonCertProposal    | Ok!                                                          |\n" +
                         "| Carbon               | CarbonCert            | Ok!                                                          |\n" +

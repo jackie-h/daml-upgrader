@@ -2,6 +2,16 @@ module Intro.SchemaChanges where
 
 import DA.Set(Set)
 
+data Claim t x a o
+  = Zero
+      -- ^ Represents an absence of claims. Monoid `And` identity.
+  | One a
+      -- ^ The bearer acquires one unit of `a` *immediately*.
+  | Give (Claim t x a o)
+  deriving (Eq,Show)
+
+type Claims = Claim Date Decimal Int Text
+
 template Same
   with
     issuer : Party
@@ -21,6 +31,15 @@ template SameWithSetPrimitives
     ensure amount > 0.0
     signatory issuer, owner
 
+template SameWithType
+  with
+    issuer : Party
+    owner : Party
+    amount : Decimal
+    claims : Claims
+  where
+    ensure amount > 0.0
+    signatory issuer, owner
 
 template AddField
   with

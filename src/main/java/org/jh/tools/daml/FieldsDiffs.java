@@ -50,8 +50,15 @@ abstract class FieldsDiffs
             {
                 FieldsIndex.DataTypeRef dataTypeRef = (FieldsIndex.DataTypeRef)type;
                 FieldsDiffs diffs = dataTypes.get(dataTypeRef.moduleName).get(dataTypeRef.name);
-                fieldCopy.add(fieldName + " = " + dataTypeRef.name + " with " +
-                        String.join("; ",diffs.getFieldsInBothCopyConstructorRecursive(dataTypes, imports, prefix + "." + fieldName)));
+                Iterable<String> cc_fields = diffs.getFieldsInBothCopyConstructorRecursive(dataTypes, imports, prefix + "." + fieldName);
+                if(cc_fields.iterator().hasNext())
+                {
+                    fieldCopy.add(fieldName + " = " + dataTypeRef.name + " with " + String.join("; ", cc_fields));
+                }
+                else
+                {
+                    fieldCopy.add(fieldName + " = " + prefix + "." + fieldName);
+                }
                 if(diffs instanceof FieldsDiffsDifferent)
                 {
                     imports.add("V2." + dataTypeRef.moduleName);
