@@ -21,7 +21,6 @@ template SameWithSetPrimitives
     ensure amount > 0.0
     signatory issuer, owner
 
-
 template AddField
   with
     issuer : Party

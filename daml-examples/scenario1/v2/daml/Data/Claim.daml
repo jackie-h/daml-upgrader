@@ -1,0 +1,11 @@
+module Data.Claim where
+
+data Claim t x a o
+  = Zero
+      -- ^ Represents an absence of claims. Monoid `And` identity.
+  | One a
+      -- ^ The bearer acquires one unit of `a` *immediately*.
+  | Give (Claim t x a o)
+  deriving (Eq,Show)
+
+type Claims = Claim Date Decimal Int Text

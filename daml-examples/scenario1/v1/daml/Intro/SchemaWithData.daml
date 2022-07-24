@@ -1,6 +1,7 @@
 module Intro.SchemaWithData where
 
 import Data.Core(Money)
+import Data.Claim(Claims)
 import Finance.Data(Asset)
 
 template ContractWithData
@@ -11,6 +12,14 @@ template ContractWithData
   where
     signatory issuer, owner
 
+template ContractWithType
+  with
+    issuer : Party
+    owner : Party
+    amount : Decimal
+    claims : Claims
+  where
+    signatory issuer, owner
 
 template ContractWithDataList
   with
