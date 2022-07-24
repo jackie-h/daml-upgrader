@@ -31,6 +31,7 @@ public class UpgraderTest
         Assert.assertEquals("---------------------------------------------------------------------------------------------------------------\n" +
                         "| Module               | Template              | Result                                                       |\n" +
                         "---------------------------------------------------------------------------------------------------------------\n" +
+                        "| Intro.SchemaWithData | ContractWithType      | Template has a type that is currently not supported          |\n" +
                         "| Intro.SchemaWithData | ContractWithDataDep   | Ok!                                                          |\n" +
                         "| Intro.SchemaWithData | ContractWithDataList  | Template has a type that is currently not supported          |\n" +
                         "| Intro.SchemaWithData | ContractWithData      | Ok!                                                          |\n" +
@@ -45,7 +46,6 @@ public class UpgraderTest
                         "| Intro.SchemaChanges  | FieldBecomesOptional  | Template schema changed in a way that is not auto-upgradable |\n" +
                         "| Intro.SchemaChanges  | SameWithSetPrimitives | Ok!                                                          |\n" +
                         "| Intro.SchemaChanges  | FieldNameChange       | Template schema changed in a way that is not auto-upgradable |\n" +
-                        "| Intro.SchemaChanges  | SameWithType          | Template has a type that is currently not supported          |\n" +
                         "| Intro.SchemaChanges  | ReorderField          | Ok!                                                          |\n" +
                         "| Carbon               | CarbonCertProposal    | Ok!                                                          |\n" +
                         "| Carbon               | CarbonCert            | Ok!                                                          |\n" +
