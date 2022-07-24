@@ -46,6 +46,7 @@ public class UpgraderTest
                         "| Intro.SchemaChanges          | SameWithSetPrimitives | Ok!                                                          |\n" +
                         "| Intro.SchemaChanges          | FieldNameChange       | Template schema changed in a way that is not auto-upgradable |\n" +
                         "| Intro.SchemaChanges          | ReorderField          | Ok!                                                          |\n" +
+                        "| Intro.SchemaWithDataExternal | ContractWithType      | Ok!                                                          |\n" +
                         "| Intro.SchemaWithDataExternal | ContractWithDataDep   | Ok!                                                          |\n" +
                         "| Carbon                       | CarbonCertProposal    | Ok!                                                          |\n" +
                         "| Carbon                       | CarbonCert            | Ok!                                                          |\n" +
@@ -60,7 +61,7 @@ public class UpgraderTest
         ArchivePayload result = Reader.readArchive(output.getMainDamlLf()).right().get();
         List<String> templates = DamlLfProtoUtils.collectTemplateNames(result.proto());
 
-        Assert.assertEquals(21, templates.size());
+        Assert.assertEquals(23, templates.size());
         Assert.assertEquals("Carbon.UpgradeCarbonCertProposal[UpgradeCarbonCertProposalAgreement]\n" +
                         "Carbon.UpgradeCarbonCert[UpgradeCarbonCertAgreement]\n" +
                         "Carbon.UpgradeCarbonCert[UpgradeCarbonCertProposal]\n" +
@@ -81,7 +82,9 @@ public class UpgraderTest
                         "Intro.SchemaWithData.UpgradeContractWithData[UpgradeContractWithDataAgreement]\n" +
                         "Intro.SchemaWithData.UpgradeContractWithData[UpgradeContractWithDataProposal]\n" +
                         "Intro.SchemaWithDataExternal.UpgradeContractWithDataDep[UpgradeContractWithDataDepAgreement]\n" +
-                        "Intro.SchemaWithDataExternal.UpgradeContractWithDataDep[UpgradeContractWithDataDepProposal]",
+                        "Intro.SchemaWithDataExternal.UpgradeContractWithDataDep[UpgradeContractWithDataDepProposal]\n" +
+                        "Intro.SchemaWithDataExternal.UpgradeContractWithType[UpgradeContractWithTypeAgreement]\n" +
+                        "Intro.SchemaWithDataExternal.UpgradeContractWithType[UpgradeContractWithTypeProposal]",
                 String.join("\n", templates));
     }
 

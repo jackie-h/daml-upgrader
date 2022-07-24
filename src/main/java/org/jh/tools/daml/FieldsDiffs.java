@@ -50,16 +50,16 @@ abstract class FieldsDiffs
             {
                 FieldsIndex.DataTypeRef dataTypeRef = (FieldsIndex.DataTypeRef)type;
                 FieldsDiffs diffs = dataTypes.get(dataTypeRef.moduleName).get(dataTypeRef.name);
-                fieldCopy.add(fieldName + " = " + dataTypeRef.name + " with " +
-                        String.join("; ",diffs.getFieldsInBothCopyConstructorRecursive(dataTypes, imports, prefix + "." + fieldName)));
                 if(diffs instanceof FieldsDiffsDifferent)
                 {
                     imports.add("V2." + dataTypeRef.moduleName);
+                    fieldCopy.add(fieldName + " = " + dataTypeRef.name + " with " +
+                            String.join("; ",diffs.getFieldsInBothCopyConstructorRecursive(dataTypes, imports, prefix + "." + fieldName)));
                 }
                 else
                 {
-                    //Imported and the same
-                    imports.add(dataTypeRef.moduleName);
+                    //the data types are the same, so there is no need to do a copy constructor
+                    fieldCopy.add(fieldName + " = " + prefix + "." + fieldName);
                 }
             }
             else
