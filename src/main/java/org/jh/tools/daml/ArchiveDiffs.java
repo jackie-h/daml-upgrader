@@ -139,10 +139,14 @@ public class ArchiveDiffs
 
                     if(dataType2 != null)
                     {
-                        fieldsDiffs = FieldsDiffsDifferent.create(
-                                dataType1.getRecord(), archiveFrom.getDamlLf1(),
-                                dataType2.getRecord(), archiveTo.getDamlLf1()
-                        );
+                        //We only understand records so far, need to do type variants
+                        if(dataType1.hasRecord() && dataType2.hasRecord())
+                        {
+                            fieldsDiffs = FieldsDiffsDifferent.create(
+                                    dataType1.getRecord(), archiveFrom.getDamlLf1(),
+                                    dataType2.getRecord(), archiveTo.getDamlLf1()
+                            );
+                        }
                     }
                     dataTypes.put(dataTypeName, fieldsDiffs);
                 }
