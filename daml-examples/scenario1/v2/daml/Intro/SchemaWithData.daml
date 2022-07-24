@@ -2,7 +2,6 @@ module Intro.SchemaWithData where
 
 import Data.Core(Money)
 import Data.Claim(Claims)
-import Finance.Data(Asset)
 
 template ContractWithData
   with
@@ -27,14 +26,5 @@ template ContractWithDataList
     issuer : Party
     owner : Party
     money : [Money]
-  where
-    signatory issuer, owner
-
-
-template ContractWithDataDep
-  with
-    issuer : Party
-    owner : Party
-    asset : Asset
   where
     signatory issuer, owner

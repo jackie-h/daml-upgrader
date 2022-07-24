@@ -1,0 +1,11 @@
+module Intro.SchemaWithDataExternal where
+
+import Finance.Data(Asset)
+
+template ContractWithDataDep
+  with
+    issuer : Party
+    owner : Party
+    asset : Asset
+  where
+    signatory issuer, owner
