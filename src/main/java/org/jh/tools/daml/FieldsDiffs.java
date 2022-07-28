@@ -128,6 +128,11 @@ abstract class FieldsDiffs
                         dtr.moduleName = DamlLfProtoUtils.getModuleName(_package, ref);
                     }
                     type = dtr;
+
+                    for(DamlLf1.Type argType : tCon.getArgsList())
+                    {
+                        type.args.add(getType(argType, _package));
+                    }
                 }
             }
 
@@ -154,7 +159,7 @@ abstract class FieldsDiffs
 
         private static class BaseType implements Type
         {
-            private List<Type> args = new ArrayList<>();
+            List<Type> args = new ArrayList<>();
 
             @Override
             public boolean isOptional()
@@ -216,7 +221,9 @@ abstract class FieldsDiffs
                     if(diffs != null)
                     {
                         //todo: this won't work for circular refs - fix
-                        return diffs.hasUpgradableFields(dataTypes);
+                        return diffs.hasUpgradableFields(dataTypes)
+                                //Tuples and collections of data types would/may need a deep copy
+                                && (super.args.size() == 0 || super.args.stream().allMatch(a -> a instanceof PrimitiveType));
                     }
                 }
 

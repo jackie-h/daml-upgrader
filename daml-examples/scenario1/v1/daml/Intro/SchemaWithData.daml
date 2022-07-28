@@ -1,6 +1,6 @@
 module Intro.SchemaWithData where
 
-import Data.Core(Money)
+import Data.Core(Money,Wallet)
 import Data.Claim(Claims)
 
 template ContractWithData
@@ -28,3 +28,10 @@ template ContractWithDataList
   where
     signatory issuer, owner
 
+template ContractWithTupleDataType
+  with
+    issuer : Party
+    owner : Party
+    wallet : Wallet
+  where
+    signatory issuer, owner

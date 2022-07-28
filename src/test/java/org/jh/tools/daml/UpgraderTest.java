@@ -28,31 +28,32 @@ public class UpgraderTest
                 "daml-examples/scenario1/v2/.daml/dist/carbon-2.0.0.dar",
                 "target/scenario1", "../../daml-examples/data/v1/.daml/dist/finance-1.0.0.dar");
 
-        Assert.assertEquals("-----------------------------------------------------------------------------------------------------------------------\n" +
-                        "| Module                       | Template              | Result                                                       |\n" +
-                        "-----------------------------------------------------------------------------------------------------------------------\n" +
-                        "| Intro.SchemaWithData         | ContractWithType      | Template has a type that is currently not supported          |\n" +
-                        "| Intro.SchemaWithData         | ContractWithDataList  | Template has a type that is currently not supported          |\n" +
-                        "| Intro.SchemaWithData         | ContractWithData      | Ok!                                                          |\n" +
-                        "| Intro.MultiParty             | Agreement             | Don't know how to upgrade contracts with >2 parties yet      |\n" +
-                        "| Intro.MultiParty             | Pending               | Don't know how to upgrade contracts with >2 parties yet      |\n" +
-                        "| Intro.SchemaChanges          | FieldBecomesMandatory | Template schema changed in a way that is not auto-upgradable |\n" +
-                        "| Intro.SchemaChanges          | Same                  | Ok!                                                          |\n" +
-                        "| Intro.SchemaChanges          | AddField              | Template schema changed in a way that is not auto-upgradable |\n" +
-                        "| Intro.SchemaChanges          | FieldTypeChange       | Template schema changed in a way that is not auto-upgradable |\n" +
-                        "| Intro.SchemaChanges          | AddOptionalField      | Ok!                                                          |\n" +
-                        "| Intro.SchemaChanges          | RemoveField           | Ok!                                                          |\n" +
-                        "| Intro.SchemaChanges          | FieldBecomesOptional  | Template schema changed in a way that is not auto-upgradable |\n" +
-                        "| Intro.SchemaChanges          | SameWithSetPrimitives | Ok!                                                          |\n" +
-                        "| Intro.SchemaChanges          | FieldNameChange       | Template schema changed in a way that is not auto-upgradable |\n" +
-                        "| Intro.SchemaChanges          | ReorderField          | Ok!                                                          |\n" +
-                        "| Intro.SchemaWithDataExternal | ContractWithType      | Ok!                                                          |\n" +
-                        "| Intro.SchemaWithDataExternal | ContractWithDataDep   | Ok!                                                          |\n" +
-                        "| Carbon                       | CarbonCertProposal    | Ok!                                                          |\n" +
-                        "| Carbon                       | CarbonCert            | Ok!                                                          |\n" +
-                        "| Intro.Invite                 | Invitation            | Ok!                                                          |\n" +
-                        "| Intro.Iou                    | Iou                   | Ok!                                                          |\n" +
-                        "-----------------------------------------------------------------------------------------------------------------------\n",
+        Assert.assertEquals("---------------------------------------------------------------------------------------------------------------------------\n" +
+                        "| Module                       | Template                  | Result                                                       |\n" +
+                        "---------------------------------------------------------------------------------------------------------------------------\n" +
+                        "| Intro.SchemaWithData         | ContractWithType          | Template has a type that is currently not supported          |\n" +
+                        "| Intro.SchemaWithData         | ContractWithTupleDataType | Template has a type that is currently not supported          |\n" +
+                        "| Intro.SchemaWithData         | ContractWithDataList      | Template has a type that is currently not supported          |\n" +
+                        "| Intro.SchemaWithData         | ContractWithData          | Ok!                                                          |\n" +
+                        "| Intro.MultiParty             | Agreement                 | Don't know how to upgrade contracts with >2 parties yet      |\n" +
+                        "| Intro.MultiParty             | Pending                   | Don't know how to upgrade contracts with >2 parties yet      |\n" +
+                        "| Intro.SchemaChanges          | FieldBecomesMandatory     | Template schema changed in a way that is not auto-upgradable |\n" +
+                        "| Intro.SchemaChanges          | Same                      | Ok!                                                          |\n" +
+                        "| Intro.SchemaChanges          | AddField                  | Template schema changed in a way that is not auto-upgradable |\n" +
+                        "| Intro.SchemaChanges          | FieldTypeChange           | Template schema changed in a way that is not auto-upgradable |\n" +
+                        "| Intro.SchemaChanges          | AddOptionalField          | Ok!                                                          |\n" +
+                        "| Intro.SchemaChanges          | RemoveField               | Ok!                                                          |\n" +
+                        "| Intro.SchemaChanges          | FieldBecomesOptional      | Template schema changed in a way that is not auto-upgradable |\n" +
+                        "| Intro.SchemaChanges          | SameWithSetPrimitives     | Ok!                                                          |\n" +
+                        "| Intro.SchemaChanges          | FieldNameChange           | Template schema changed in a way that is not auto-upgradable |\n" +
+                        "| Intro.SchemaChanges          | ReorderField              | Ok!                                                          |\n" +
+                        "| Intro.SchemaWithDataExternal | ContractWithType          | Ok!                                                          |\n" +
+                        "| Intro.SchemaWithDataExternal | ContractWithDataDep       | Ok!                                                          |\n" +
+                        "| Carbon                       | CarbonCertProposal        | Ok!                                                          |\n" +
+                        "| Carbon                       | CarbonCert                | Ok!                                                          |\n" +
+                        "| Intro.Invite                 | Invitation                | Ok!                                                          |\n" +
+                        "| Intro.Iou                    | Iou                       | Ok!                                                          |\n" +
+                        "---------------------------------------------------------------------------------------------------------------------------\n",
                 archiveDiffs.report());
 
         DamlCommand.cleanBuildDar("target/scenario1");

@@ -4,3 +4,5 @@ data Money = Money with
   currency : Text
   amount : Decimal
     deriving (Eq, Show)
+
+type Wallet = (Party, Money)
