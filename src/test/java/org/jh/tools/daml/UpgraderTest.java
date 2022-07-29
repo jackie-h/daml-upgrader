@@ -35,6 +35,7 @@ public class UpgraderTest
                         "| Intro.SchemaWithData         | ContractWithTupleDataType | Template has a type that is currently not supported          |\n" +
                         "| Intro.SchemaWithData         | ContractWithDataList      | Template has a type that is currently not supported          |\n" +
                         "| Intro.SchemaWithData         | ContractWithData          | Ok!                                                          |\n" +
+                        "| Intro.SchemaWithData         | ContractWithNestedData    | Ok!                                                          |\n" +
                         "| Intro.MultiParty             | Agreement                 | Don't know how to upgrade contracts with >2 parties yet      |\n" +
                         "| Intro.MultiParty             | Pending                   | Don't know how to upgrade contracts with >2 parties yet      |\n" +
                         "| Intro.SchemaChanges          | FieldBecomesMandatory     | Template schema changed in a way that is not auto-upgradable |\n" +
@@ -62,7 +63,7 @@ public class UpgraderTest
         ArchivePayload result = Reader.readArchive(output.getMainDamlLf()).right().get();
         List<String> templates = DamlLfProtoUtils.collectTemplateNames(result.proto());
 
-        Assert.assertEquals(23, templates.size());
+        Assert.assertEquals(25, templates.size());
         Assert.assertEquals("Carbon.UpgradeCarbonCertProposal[UpgradeCarbonCertProposalAgreement]\n" +
                         "Carbon.UpgradeCarbonCert[UpgradeCarbonCertAgreement]\n" +
                         "Carbon.UpgradeCarbonCert[UpgradeCarbonCertProposal]\n" +
@@ -82,6 +83,8 @@ public class UpgraderTest
                         "Intro.SchemaChanges.UpgradeSame[UpgradeSameProposal]\n" +
                         "Intro.SchemaWithData.UpgradeContractWithData[UpgradeContractWithDataAgreement]\n" +
                         "Intro.SchemaWithData.UpgradeContractWithData[UpgradeContractWithDataProposal]\n" +
+                        "Intro.SchemaWithData.UpgradeContractWithNestedData[UpgradeContractWithNestedDataAgreement]\n" +
+                        "Intro.SchemaWithData.UpgradeContractWithNestedData[UpgradeContractWithNestedDataProposal]\n" +
                         "Intro.SchemaWithDataExternal.UpgradeContractWithDataDep[UpgradeContractWithDataDepAgreement]\n" +
                         "Intro.SchemaWithDataExternal.UpgradeContractWithDataDep[UpgradeContractWithDataDepProposal]\n" +
                         "Intro.SchemaWithDataExternal.UpgradeContractWithType[UpgradeContractWithTypeAgreement]\n" +

@@ -34,12 +34,12 @@ abstract class FieldsDiffs
     FieldConstructors getFieldsInBothCopyConstructor(Map<String, Map<String, FieldsDiffs>> dataTypes)
     {
         Set<String> imports = new HashSet<>();
-        Iterable<String> fieldCopy = this.getFieldsInBothCopyConstructorRecursive(dataTypes, imports, "cert");
+        Iterable<String> fieldCopy = this.getFieldsInBothCopyConstructorRecursive(dataTypes, imports, "cert", "          ");
         return new FieldConstructors(imports, fieldCopy);
     }
 
     private Iterable<String> getFieldsInBothCopyConstructorRecursive(
-            Map<String, Map<String, FieldsDiffs>> dataTypes, Set<String> imports, String prefix)
+            Map<String, Map<String, FieldsDiffs>> dataTypes, Set<String> imports, String prefix, String indent)
     {
         List<String> fieldCopy = new ArrayList<>();
         for(String fieldName: this.fieldsInBoth())
@@ -53,18 +53,19 @@ abstract class FieldsDiffs
                 if(diffs instanceof FieldsDiffsDifferent)
                 {
                     imports.add("V2." + dataTypeRef.moduleName);
-                    fieldCopy.add(fieldName + " = " + dataTypeRef.name + " with " +
-                            String.join("; ",diffs.getFieldsInBothCopyConstructorRecursive(dataTypes, imports, prefix + "." + fieldName)));
+                    fieldCopy.add(indent + fieldName + " = " + dataTypeRef.name + " with\n" +
+                            String.join("\n",
+                                    diffs.getFieldsInBothCopyConstructorRecursive(dataTypes, imports, prefix + "." + fieldName, indent + "  ")));
                 }
                 else
                 {
                     //the data types are the same, so there is no need to do a copy constructor
-                    fieldCopy.add(fieldName + " = " + prefix + "." + fieldName);
+                    fieldCopy.add(indent + fieldName + " = " + prefix + "." + fieldName);
                 }
             }
             else
             {
-                fieldCopy.add(fieldName + " = " + prefix + "." + fieldName);
+                fieldCopy.add(indent + fieldName + " = " + prefix + "." + fieldName);
             }
         }
         return fieldCopy;

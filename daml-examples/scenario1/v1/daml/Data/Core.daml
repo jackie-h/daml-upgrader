@@ -6,3 +6,9 @@ data Money = Money with
     deriving (Eq, Show)
 
 type Wallet = (Party, Money)
+
+-- Used to test a nested structure with data (Money) inside data (Order)
+data Order = Order with
+  cash: Money
+  message: Text
+    deriving (Eq, Show)

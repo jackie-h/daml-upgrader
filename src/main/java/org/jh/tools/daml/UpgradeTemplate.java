@@ -12,7 +12,7 @@ public class UpgradeTemplate
 
     private static final String CREATE_CONTRACT_TEMPLATE_PART = "         archive certId\n" +
             "         create <module_name>V2.<contract_name> with\n" +
-            "<fields:{ field |           <field>\n }>" +
+            "<fields:{ field | <field>\n }>" +
             "<new_optional_fields:{ field |           <field> = None\n }>";
 
     private static final String UPGRADE_TEMPLATE_UNILATERAL = "module <module_name>.Upgrade<contract_name> where\n" +
